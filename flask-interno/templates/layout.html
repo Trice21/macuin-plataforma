@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} — MACUIN Interno</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1F3A5F;
+            --secondary: #4A6FA5;
+            --accent: #E2E8F0;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --bg: #F8FAFC;
+            --card: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #64748B;
+            --sidebar-width: 260px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--primary);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+        }
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            text-align: center;
+        }
+        .sidebar-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .sidebar-nav {
+            flex: 1;
+            padding: 0 1rem;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.875rem 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+        }
+        .nav-item i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        .nav-item:hover, .nav-item.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .nav-item.active {
+            background: var(--secondary);
+            font-weight: 500;
+        }
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .user-info {
+            text-align: right;
+        }
+        .user-name {
+            display: block;
+            font-weight: 600;
+            font-size: 0.9375rem;
+        }
+        .user-role {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .badge {
+            padding: 0.25rem 0.625rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-pending { background: #FEF3C7; color: #92400E; }
+        .badge-success { background: #D1FAE5; color: #065F46; }
+        .badge-info { background: #DBEAFE; color: #1E40AF; }
+
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">MACUIN</div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/dashboard" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+                <i class="fas fa-th-large"></i> Dashboard
+            </a>
+            <a href="/pedidos" class="nav-item {% if active_page == 'pedidos' %}active{% endif %}">
+                <i class="fas fa-shopping-cart"></i> Pedidos
+            </a>
+            <a href="/reportes" class="nav-item {% if active_page == 'reportes' %}active{% endif %}">
+                <i class="fas fa-chart-bar"></i> Reportes
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/login" class="nav-item">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <div>
+                <h1 style="font-size: 1.5rem; font-weight: 700;">{% block header_title %}{% endblock %}</h1>
+            </div>
+            <div class="user-profile">
+                <div class="user-info">
+                    <span class="user-name">Administrador</span>
+                    <span class="user-role">Soporte Interno</span>
+                </div>
+                <div class="avatar">AD</div>
+            </div>
+        </header>
+
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

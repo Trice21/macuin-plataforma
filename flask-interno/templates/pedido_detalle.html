@@ -1,0 +1,183 @@
+{% extends "layout.html" %}
+
+{% block title %}Detalle de Pedido #{{ pedido_id }}{% endblock %}
+{% block header_title %}Detalle de Pedido #{{ pedido_id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .order-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+    }
+    .section-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 1.25rem;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .info-list {
+        list-style: none;
+    }
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--accent);
+    }
+    .info-item:last-child { border-bottom: none; }
+    .info-label { color: var(--text-secondary); font-size: 0.875rem; }
+    .info-value { font-weight: 500; font-size: 0.875rem; }
+    
+    .product-list { margin-top: 1rem; }
+    .product-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--accent);
+    }
+    .product-img {
+        width: 60px;
+        height: 60px;
+        background: #F1F5F9;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--secondary);
+    }
+    .product-info { flex: 1; }
+    .product-name { font-weight: 600; font-size: 0.9375rem; margin-bottom: 0.25rem; }
+    .product-meta { color: var(--text-secondary); font-size: 0.8125rem; }
+    .product-price { font-weight: 600; color: var(--text-primary); }
+
+    .btn-action {
+        padding: 0.625rem 1.25rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    .btn-success { background: var(--success); color: white; }
+    .btn-secondary { background: var(--secondary); color: white; }
+    .btn-outline { border: 1px solid var(--accent); background: white; color: var(--text-secondary); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="order-header">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <a href="/dashboard" class="btn-action btn-outline">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+        <span class="badge badge-pending">Pendiente de Procesar</span>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+        <button class="btn-action btn-outline"><i class="fas fa-print"></i> Imprimir</button>
+        <button class="btn-action btn-secondary"><i class="fas fa-truck"></i> Marcar Enviado</button>
+        <button class="btn-action btn-success"><i class="fas fa-check"></i> Completar</button>
+    </div>
+</div>
+
+<div class="order-grid">
+    <div class="card">
+        <h3 class="section-title"><i class="fas fa-box"></i> Productos del Pedido</h3>
+        <div class="product-list">
+            <div class="product-item">
+                <div class="product-img"><i class="fas fa-tools"></i></div>
+                <div class="product-info">
+                    <div class="product-name">Amortiguador Delantero</div>
+                    <div class="product-meta">SKU: AM-7821-X | Cantidad: 2</div>
+                </div>
+                <div class="product-price">$2,450.00</div>
+            </div>
+            <div class="product-item">
+                <div class="product-img"><i class="fas fa-oil-can"></i></div>
+                <div class="product-info">
+                    <div class="product-name">Filtro de Aceite Premium</div>
+                    <div class="product-meta">SKU: FI-9021-P | Cantidad: 1</div>
+                </div>
+                <div class="product-price">$380.00</div>
+            </div>
+            <div class="product-item">
+                <div class="product-img"><i class="fas fa-car-battery"></i></div>
+                <div class="product-info">
+                    <div class="product-name">Bujía Iridium Plus</div>
+                    <div class="product-meta">SKU: BU-4422-I | Cantidad: 4</div>
+                </div>
+                <div class="product-price">$1,200.00</div>
+            </div>
+        </div>
+        <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid var(--bg); display: flex; justify-content: flex-end;">
+            <div style="width: 240px;">
+                <div class="info-item">
+                    <span class="info-label">Subtotal</span>
+                    <span class="info-value">$4,030.00</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Envío</span>
+                    <span class="info-value">$150.00</span>
+                </div>
+                <div class="info-item" style="border-top: 1px solid var(--accent); margin-top: 0.5rem; padding-top: 1rem;">
+                    <span class="info-label" style="font-weight: 700; color: var(--text-primary);">Total</span>
+                    <span class="info-value" style="font-size: 1.25rem; color: var(--primary);">$4,180.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <div class="card">
+            <h3 class="section-title"><i class="fas fa-user"></i> Cliente</h3>
+            <ul class="info-list">
+                <li class="info-item">
+                    <span class="info-label">Nombre</span>
+                    <span class="info-value">Juan Pérez López</span>
+                </li>
+                <li class="info-item">
+                    <span class="info-label">Email</span>
+                    <span class="info-value">juan.perez@email.com</span>
+                </li>
+                <li class="info-item">
+                    <span class="info-label">Teléfono</span>
+                    <span class="info-value">+52 555 123 4567</span>
+                </li>
+            </ul>
+        </div>
+        <div class="card">
+            <h3 class="section-title"><i class="fas fa-shipping-fast"></i> Envío</h3>
+            <ul class="info-list">
+                <li class="info-item">
+                    <span class="info-label">Método</span>
+                    <span class="info-value">Estándar (3-5 días)</span>
+                </li>
+                <li class="info-item" style="flex-direction: column; gap: 0.5rem;">
+                    <span class="info-label">Dirección</span>
+                    <span class="info-value" style="line-height: 1.4;">Av. Insurgentes Sur 1234, Benito Juárez, CDMX, 03100</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
