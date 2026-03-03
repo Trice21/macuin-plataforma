@@ -14,7 +14,7 @@ def dashboard():
 
 @app.route("/pedidos")
 def pedidos():
-    return render_template("dashboard.html", active_page='pedidos')
+    return render_template("pedidos.html", active_page='pedidos')
 
 @app.route("/pedido/<int:pedido_id>")
 def pedido_detalle(pedido_id):
@@ -23,6 +23,18 @@ def pedido_detalle(pedido_id):
 @app.route("/reportes")
 def reportes():
     return render_template("reportes.html", active_page='reportes')
+
+@app.route("/autopartes")
+def autopartes():
+    return render_template("autopartes.html", active_page='autopartes')
+
+@app.route("/inventario")
+def inventario():
+    return render_template("inventario.html", active_page='inventario')
+
+@app.route("/usuarios")
+def usuarios():
+    return render_template("usuarios.html", active_page='usuarios')
 
 if __name__ == "__main__":
     app.run(debug=True)

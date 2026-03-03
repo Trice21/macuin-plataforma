@@ -1,0 +1,112 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<style>
+    .titulo-seccion {
+        font-weight: 700;
+        margin-bottom: 25px;
+        color: #2c3e50;
+    }
+
+    .card-resumen {
+        border-radius: 12px;
+        padding: 20px;
+        color: white;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .bg-azul { background-color: #34495e; }
+    .bg-amarillo { background-color: #f1c40f; color: black; }
+    .bg-rojo { background-color: #e74c3c; }
+
+    .tabla-inventario thead {
+        background-color: #2c3e50;
+        color: white;
+    }
+
+    .tabla-inventario th, .tabla-inventario td {
+        padding: 14px;
+        text-align: center;
+    }
+
+    .tabla-inventario tbody tr:hover {
+        background-color: #f4f6f7;
+    }
+
+    .badge-stock {
+        padding: 6px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .stock-ok { background: #2ecc71; color: white; }
+    .stock-bajo { background: #f39c12; color: white; }
+    .stock-agotado { background: #e74c3c; color: white; }
+</style>
+
+<div class="container-fluid">
+
+    <h2 class="titulo-seccion">Gestión de Inventario</h2>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card-resumen bg-azul">
+                <h5>Total Productos</h5>
+                <h3>45</h3>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card-resumen bg-amarillo">
+                <h5>Bajo Stock</h5>
+                <h3>5</h3>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card-resumen bg-rojo">
+                <h5>Agotados</h5>
+                <h3>2</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="tabla-inventario shadow-sm mt-4">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>Autoparte</th>
+                    <th>Stock Actual</th>
+                    <th>Stock Mínimo</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Filtro de Aceite</td>
+                    <td>20</td>
+                    <td>5</td>
+                    <td><span class="badge-stock stock-ok">Disponible</span></td>
+                </tr>
+                <tr>
+                    <td>Bujía NGK</td>
+                    <td>3</td>
+                    <td>5</td>
+                    <td><span class="badge-stock stock-bajo">Bajo Stock</span></td>
+                </tr>
+                <tr>
+                    <td>Radiador</td>
+                    <td>0</td>
+                    <td>2</td>
+                    <td><span class="badge-stock stock-agotado">Agotado</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}
