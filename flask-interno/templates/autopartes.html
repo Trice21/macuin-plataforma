@@ -5,8 +5,15 @@
 <style>
     .titulo-seccion {
         font-weight: 700;
-        margin-bottom: 25px;
+        margin-bottom: 10px;
         color: #2c3e50;
+    }
+
+    .separador-titulo {
+        border: none;
+        height: 1px;
+        background-color: var(--accent);
+        margin-bottom: 25px;
     }
 
     .btn-agregar {
@@ -23,10 +30,9 @@
         background-color: #d4ac0d;
     }
 
-    .tabla-autopartes {
-        border-radius: 12px;
-        overflow: hidden;
-        background: #fff;
+    .tabla-autopartes table {
+        width: 100%;
+        border-collapse: collapse;
     }
 
     .tabla-autopartes thead {
@@ -34,17 +40,23 @@
         color: #fff;
     }
 
-    .tabla-autopartes th {
-        padding: 14px;
-        font-size: 14px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
+    .tabla-autopartes th,
     .tabla-autopartes td {
         padding: 14px;
-        vertical-align: middle;
         font-size: 14px;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--accent);
+        border-right: 1px solid #ffffff30;
+    }
+
+    .tabla-autopartes th:last-child,
+    .tabla-autopartes td:last-child {
+        border-right: none;
+    }
+
+    .tabla-autopartes th {
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
 
     .tabla-autopartes tbody tr:hover {
@@ -102,59 +114,64 @@
 <div class="container-fluid">
 
     <h2 class="titulo-seccion">Gestión de Autopartes</h2>
+    <hr class="separador-titulo">
 
     <div style="text-align: right; margin-bottom: 20px;">
         <button class="btn-agregar">+ Agregar Nueva Autoparte</button>
     </div>
 
-    <div class="tabla-autopartes shadow-sm">
-        <table class="table mb-0 text-center">
+    <div class="card">
 
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Categoría</th>
-                    <th>Marca</th>
-                    <th>Precio</th>
-                    <th>Stock</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
+        <div class="tabla-autopartes">
+            <table class="table mb-0 text-center">
 
-            <tbody>
-                <tr>
-                    <td>1</td>
-                    <td><strong>Filtro de Aceite</strong></td>
-                    <td>Motor</td>
-                    <td>Bosch</td>
-                    <td>$250</td>
-                    <td>
-                        <span class="badge-stock stock-ok">Disponible</span>
-                    </td>
-                    <td>
-                        <button class="btn-editar">Editar</button>
-                        <button class="btn-eliminar">Eliminar</button>
-                    </td>
-                </tr>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Categoría</th>
+                        <th>Marca</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
 
-                <tr>
-                    <td>2</td>
-                    <td><strong>Bujía NGK</strong></td>
-                    <td>Encendido</td>
-                    <td>NGK</td>
-                    <td>$120</td>
-                    <td>
-                        <span class="badge-stock stock-bajo">Bajo Stock</span>
-                    </td>
-                    <td>
-                        <button class="btn-editar">Editar</button>
-                        <button class="btn-eliminar">Eliminar</button>
-                    </td>
-                </tr>
-            </tbody>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td><strong>Filtro de Aceite</strong></td>
+                        <td>Motor</td>
+                        <td>Bosch</td>
+                        <td>$250</td>
+                        <td>
+                            <span class="badge-stock stock-ok">Disponible</span>
+                        </td>
+                        <td>
+                            <button class="btn-editar">Editar</button>
+                            <button class="btn-eliminar">Eliminar</button>
+                        </td>
+                    </tr>
 
-        </table>
+                    <tr>
+                        <td>2</td>
+                        <td><strong>Bujía NGK</strong></td>
+                        <td>Encendido</td>
+                        <td>NGK</td>
+                        <td>$120</td>
+                        <td>
+                            <span class="badge-stock stock-bajo">Bajo Stock</span>
+                        </td>
+                        <td>
+                            <button class="btn-editar">Editar</button>
+                            <button class="btn-eliminar">Eliminar</button>
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table>
+        </div>
+
     </div>
 
 </div>
