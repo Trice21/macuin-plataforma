@@ -12,6 +12,7 @@ def login():
         return redirect(url_for("dashboard"))
     return render_template("auth/login.html")
 
+
 @app.route("/dashboard")
 def dashboard():
     return render_template("admin/dashboard.html", active_page='dashboard')
@@ -39,6 +40,10 @@ def inventario():
 @app.route("/usuarios")
 def usuarios():
     return render_template("admin/usuarios.html", active_page='usuarios')
+
+@app.route("/catalogo")
+def catalogo():
+    return render_template("catalogo.html", active_page='catalogo')
 
 if __name__ == "__main__":
     app.run(debug=True)
