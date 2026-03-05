@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Catálogo de Autopartes - Macuin</title>
+        <script scr="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class= "bg-gray-100">
+        <header class="bg-blue-600 text-white p-4 shadow-md flex justify-between items-center">
+            <h1 class="text-xl font-bold">Macuin Plataforma</h1>
+            <nav class="space-x-4">
+                <input type="text" placeholder="Buscar pieza..." class="py-1 rounded text-black outline-none">
+                <button class="text-2xl">=</button>
+            </nav>
+        </header>
+        <main class="p-8">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b-2 border-blue-600 inline-block">Catálogo de Autopartes</h2>
+
+            <div id="grid-catalogo" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            </div>
+        </main>
+        <script>
+            const inventario = [
+                {id: 1, nombre: "Pastillas de freno cerámicas", precio: 89.99, img: "https://via.placeholder.com/150", sku: "BRK-001"},
+                {id: 2, nombre: "Turbo compresor GT35-R", precio: 1200.00, img: "https://via.placeholder.com/150", sku: "TRB-035"},
+                {id: 3, nombre: "Amortiguador Gas-Adjust", precio: 150.00, img: "https://via.placeholder.com/150", sku: "SHK-102"},
+                {id: 4, nombre: "Kit de Emgrague", precio: 25.99, img: "https://via.placeholder.com/150", sku: "CLU-550"},
+                {id: 5, nombre: "Bomba de agua Eléctrica", precio: 15.99, img: "https://via.placeholder.com/150", sku: "WTR-992"},
+                {id: 6, nombre: "Radiador de Aluminio", precio: 12.99, img: "https://via.placeholder.com/150", sku: "RAD-202"},
+                {id: 7, nombre: "Alternador 140 Amperes", precio: 200.00, img: "https://via.placeholder.com/150", sku: "ALT-440"},
+                {id: 8, nombre: "Filtro de Aire Alto Flujo", precio: 89.99, img: "https://via.placeholder.com/150", sku: "AIR-007"},
+                {id: 9, nombre: "Brujías de Iridio (Set 4)", precio: 199.99, img: "https://via.placeholder.com/150", sku: "BAT-12V"},
+                {id: 10, nombre: "Banda de Distribución", precio: 25.99, img: "https://via.placeholder.com/150", sku: "LED-001"},
+                {id: 11, nombre: "Sensor de Oxígeno O2", precio: 15.99, img: "https://via.placeholder.com/150", sku: "CBL-001"},
+                {id: 12, nombre: "Inyecciones de 550cc", precio: 45.99, img: "https://via.placeholder.com/150", sku: "SEN-001"},
+                {id: 13, nombre: "Disco de Freno Hi-Carbon", precio: 89.99, img: "https://via.placeholder.com/150", sku: "TUB-001"},
+                {id: 14, nombre: "Cuerpo de aceleración", precio: 120.00, img: "https://via.placeholder.com/150", sku: "SUP-001"},
+                {id: 15, nombre: "Bobinas de Encendido Red", precio: 25.99, img: "https://via.placeholder.com/150", sku: "BEL-001"},
+                {id: 16, nombre: "Múltiple de Admisión", precio: 15.99, img: "https://via.placeholder.com/150", sku: "FUE-001"},
+                {id: 17, nombre: "Intercooler Frontal", precio: 12.99, img: "https://via.placeholder.com/150", sku: "RAD-202"},
+                {id: 18, nombre: "Válvula de Alivio (Bov)", precio: 200.00, img: "https://via.placeholder.com/150", sku: "ALT-440"},
+                {id: 19, nombre: "Soporte Motor Reforzado", precio: 89.99, img: "https://via.placeholder.com/150", sku: "AIR-007"},
+                {id: 20, nombre: "Batería AGM Pro", precio: 199.99, img: "https://via.placeholder.com/150", sku: "BAT-12V"},
+            ];
+            const grid = document.getElementById('grid-catalogo');
+            inventario.forEach(p => {
+                grid.innerHTML += `
+                <div class="bg-white p-4 rounded-xl shadow hover:shadow-lg border-transparent hover:border-blue-500 transition-all text-center">
+                    <img src="${p.img}" alt="${p.nombre}" class="mx-auto mb-4 h-32 object-container">
+                    <h3 class="text-blue-600 font-gray-700 text-sm h-10 overflow-hidden">${p.nombre}</h3>
+                    <p class="text-blue-600 font-bold text-xl my-2">$${p.precio.toFixed(2)}</p>
+                    <a href="detalle.html?id=${p.id}" class="inline-block w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition">Añadir</a>
+                </div>
+                `;
+            });
+        </script>
+    </body>
+</html>
