@@ -364,8 +364,8 @@
             <h1>Bienvenido, {{ $userName }}</h1>
             <p>Aquí puedes gestionar tus pedidos y explorar autopartes</p>
             <div class="welcome-btns">
-                <a href="#" class="btn-primary">Explorar catálogo</a>
-                <a href="#" class="btn-secondary">Ver todos mis pedidos</a>
+                <a href="{{ url('/catalogo') }}" class="btn-primary">Explorar catálogo</a>
+                <a href="{{ url('/pedidos') }}" class="btn-secondary">Ver todos mis pedidos</a>
             </div>
         </section>
 

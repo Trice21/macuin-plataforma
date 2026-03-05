@@ -20,10 +20,17 @@ Route::get('/registro', function () {
 Route::get('/dashboard', function () {
     return view('dashboard.index');
 });
+
+// Historial de pedidos
+Route::get('/pedidos', function () {
+    return view('pedidos.historial');
+});
+
 //Crear pedido externo
 Route::get('/pedidos/crear', function () {
     return view('pedidos.crear');
 });
+
 // Detalle de pedido externo
 Route::get('/pedidos/{id}', function (string $id) {
     return view('pedidos.detalle', ['id' => $id]);
