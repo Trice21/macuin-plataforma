@@ -456,11 +456,15 @@
             @foreach($products as $index => $p)
             @php $productImg = strtolower(explode(' ', trim($p['name']))[0]) . '.png'; @endphp
             <article class="product-card" data-product-id="{{ $index + 1 }}">
-                <div class="img-wrap">
-                    <img src="{{ asset('images/' . $productImg) }}" alt="{{ $p['name'] }}" onerror="this.style.display='none'">
-                </div>
+                <a href="{{ url('/catalogo/' . ($index + 1)) }}" style="text-decoration: none; color: inherit;">
+                    <div class="img-wrap">
+                        <img src="{{ asset('images/' . $productImg) }}" alt="{{ $p['name'] }}" onerror="this.style.display='none'">
+                    </div>
+                </a>
                 <div class="body">
-                    <h3 class="name">{{ $p['name'] }}</h3>
+                    <a href="{{ url('/catalogo/' . ($index + 1)) }}" style="text-decoration: none; color: inherit;">
+                        <h3 class="name">{{ $p['name'] }}</h3>
+                    </a>
                     <div class="sku">{{ $p['sku'] }}</div>
                     <div class="price">${{ $p['price'] }}</div>
                     <span class="stock-badge stock-{{ $p['stock'] }}">{{ $p['stock_label'] }}</span>

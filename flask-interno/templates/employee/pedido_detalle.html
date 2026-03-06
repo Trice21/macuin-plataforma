@@ -88,7 +88,7 @@
 {% block content %}
 <div class="order-header">
     <div style="display: flex; align-items: center; gap: 1rem;">
-        <a href="/dashboard" class="btn-action btn-outline">
+        <a href="{{ url_for('employee_pedidos') }}" class="btn-action btn-outline">
             <i class="fas fa-arrow-left"></i> Volver
         </a>
         <span class="badge badge-pending">Pendiente de Procesar</span>

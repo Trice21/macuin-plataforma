@@ -39,3 +39,8 @@ Route::get('/pedidos/{id}', function (string $id) {
 Route::get('/catalogo', function () {
     return view('catalogo.index');
 });
+
+// Detalle de autoparte
+Route::get('/catalogo/{id}', function (string $id) {
+    return view('catalogo.detalle', ['id' => $id]);
+});

@@ -2,6 +2,10 @@ from flask import Flask, render_template, request, redirect, url_for
 
 app = Flask(__name__)
 
+@app.route("/")
+def index():
+    return redirect(url_for("login"))
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -10,31 +14,31 @@ def login():
 
 @app.route("/dashboard")
 def dashboard():
-    return render_template("dashboard.html", active_page='dashboard')
+    return render_template("admin/dashboard.html", active_page='dashboard')
 
-@app.route("/pedidos")
+@app.route("/pedidos", endpoint="employee_pedidos")
 def pedidos():
-    return render_template("pedidos.html", active_page='pedidos')
+    return render_template("employee/pedidos.html", active_page='pedidos')
 
-@app.route("/pedido/<int:pedido_id>")
+@app.route("/pedido/<int:pedido_id>", endpoint="employee_pedido_detalle")
 def pedido_detalle(pedido_id):
-    return render_template("pedido_detalle.html", pedido_id=pedido_id, active_page='pedidos')
+    return render_template("employee/pedido_detalle.html", pedido_id=pedido_id, active_page='pedidos')
 
 @app.route("/reportes")
 def reportes():
-    return render_template("reportes.html", active_page='reportes')
+    return render_template("admin/reportes.html", active_page='reportes')
 
 @app.route("/autopartes")
 def autopartes():
-    return render_template("autopartes.html", active_page='autopartes')
+    return render_template("admin/autopartes.html", active_page='autopartes')
 
 @app.route("/inventario")
 def inventario():
-    return render_template("inventario.html", active_page='inventario')
+    return render_template("admin/inventario.html", active_page='inventario')
 
 @app.route("/usuarios")
 def usuarios():
-    return render_template("usuarios.html", active_page='usuarios')
+    return render_template("admin/usuarios.html", active_page='usuarios')
 
 if __name__ == "__main__":
     app.run(debug=True)
