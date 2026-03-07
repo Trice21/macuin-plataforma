@@ -52,4 +52,4 @@ def catalogo():
     return render_template("catalogo.html", active_page='catalogo')
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')

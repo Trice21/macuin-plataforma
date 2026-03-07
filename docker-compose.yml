@@ -1,0 +1,53 @@
+services:
+  # Servicio para la aplicación Laravel (Externo)
+  laravel-app:
+    build:
+      context: ./laravel-externo
+      dockerfile: Dockerfile
+    container_name: macuin-laravel
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "8000:80"
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=macuin_db
+      - DB_USERNAME=macuin_user
+      - DB_PASSWORD=macuin_password
+    volumes:
+      - ./laravel-externo:/var/www/html
+    depends_on:
+      - db
+
+  # Servicio para la aplicación Flask (Interno)
+  flask-app:
+    build:
+      context: ./flask-interno
+      dockerfile: Dockerfile
+    container_name: macuin-flask
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./flask-interno:/app
+
+  # Base de datos MySQL compartida
+  db:
+    image: mysql:8.0
+    container_name: macuin-db
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_DATABASE: macuin_db
+      MYSQL_USER: macuin_user
+      MYSQL_PASSWORD: macuin_password
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+volumes:
+  mysql-data:
