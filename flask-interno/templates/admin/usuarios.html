@@ -23,6 +23,89 @@
         background-color: #d4ac0d;
     }
 
+    .user-form-card {
+        display: none;
+        margin-bottom: 24px;
+        border: 1px solid var(--accent);
+    }
+
+    .user-form-card.show {
+        display: block;
+    }
+
+    .form-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1F3A5F;
+        margin-bottom: 18px;
+    }
+
+    .user-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d7dde5;
+        border-radius: 8px;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+        border-color: #1F3A5F;
+        box-shadow: 0 0 0 3px rgba(31, 58, 95, 0.12);
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 8px;
+    }
+
+    .btn-cancelar {
+        background-color: #ecf0f1;
+        color: #2c3e50;
+        font-weight: 600;
+        border-radius: 8px;
+        padding: 8px 18px;
+        border: none;
+    }
+
+    .btn-cancelar:hover {
+        background-color: #dfe6e9;
+    }
+
+    .btn-guardar {
+        background-color: #1F3A5F;
+        color: white;
+        font-weight: 600;
+        border-radius: 8px;
+        padding: 8px 18px;
+        border: none;
+    }
+
+    .btn-guardar:hover {
+        background-color: #16304f;
+    }
+
     .tabla-usuarios table {
         width: 100%;
         border-collapse: collapse;
@@ -87,13 +170,71 @@
     .btn-eliminar:hover {
         background-color: #c0392b;
     }
+
+    @media (max-width: 768px) {
+        .user-form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
 <div class="container-fluid">
 
     <h2 class="titulo-seccion">Gestión de Usuarios</h2>
 
-    <button class="btn-nuevo">+ Nuevo Usuario</button>
+    <button class="btn-nuevo" type="button" id="toggle-user-form">+ Nuevo Usuario</button>
+
+    <div class="card user-form-card" id="user-form-card">
+        <h3 class="form-title">Agregar nuevo usuario</h3>
+
+        <form>
+            <div class="user-form-grid">
+                <div class="form-group">
+                    <label for="nombre">Nombre completo</label>
+                    <input type="text" id="nombre" class="form-control" placeholder="Ej. Ana López">
+                </div>
+
+                <div class="form-group">
+                    <label for="usuario">Usuario</label>
+                    <input type="text" id="usuario" class="form-control" placeholder="Ej. alopez">
+                </div>
+
+                <div class="form-group">
+                    <label for="correo">Correo electrónico</label>
+                    <input type="email" id="correo" class="form-control" placeholder="Ej. ana@macuin.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="rol">Rol</label>
+                    <select id="rol" class="form-control">
+                        <option value="">Selecciona un rol</option>
+                        <option>Administrador</option>
+                        <option>Ventas</option>
+                        <option>Almacén</option>
+                        <option>Logística</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Contraseña temporal</label>
+                    <input type="password" id="password" class="form-control" placeholder="Ingresa una contraseña temporal">
+                </div>
+
+                <div class="form-group">
+                    <label for="estado">Estado</label>
+                    <select id="estado" class="form-control">
+                        <option>Activo</option>
+                        <option>Inactivo</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn-cancelar" id="cancel-user-form">Cancelar</button>
+                <button type="submit" class="btn-guardar">Guardar usuario</button>
+            </div>
+        </form>
+    </div>
 
     <div class="card">
 
@@ -126,5 +267,23 @@
     </div>
 
 </div>
+
+<script>
+    (function () {
+        const toggleBtn = document.getElementById('toggle-user-form');
+        const cancelBtn = document.getElementById('cancel-user-form');
+        const formCard = document.getElementById('user-form-card');
+
+        if (!toggleBtn || !cancelBtn || !formCard) return;
+
+        toggleBtn.addEventListener('click', function () {
+            formCard.classList.toggle('show');
+        });
+
+        cancelBtn.addEventListener('click', function () {
+            formCard.classList.remove('show');
+        });
+    })();
+</script>
 
 {% endblock %}

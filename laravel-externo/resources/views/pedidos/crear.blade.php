@@ -25,20 +25,99 @@
             font-family: 'Inter', sans-serif;
             background: var(--bg);
             color: var(--text-primary);
+            min-height: 100vh;
+        }
+        .page-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background: var(--bg);
+        }
+        .page-bg::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0.025;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 8v4l-2 1 2 2 2-2-2-1v-4zm0 32v4l2 1-2 2-2-2 2-1v-4z' fill='%231F3A5F'/%3E%3C/svg%3E");
         }
         .header {
+            position: relative;
+            z-index: 2;
             background: var(--card);
-            padding: 1rem 2rem;
+            padding: 0.875rem 1.5rem;
             box-shadow: 0 1px 3px rgba(0,0,0,0.06);
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
-        .logo { font-size: 1.5rem; font-weight: 700; color: var(--primary); text-decoration: none; }
-        .nav a { text-decoration: none; color: var(--text-secondary); margin-left: 1.5rem; font-weight: 500; }
-        .nav a:hover { color: var(--primary); }
+        .header-left { display: flex; align-items: center; gap: 2rem; }
+        .header-logo {
+            height: 36px;
+            width: auto;
+            display: block;
+        }
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .header-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            transition: color 0.2s, background 0.2s;
+        }
+        .header-nav a:hover { color: var(--primary); background: rgba(31, 58, 95, 0.06); }
+        .header-nav a.active { color: var(--primary); background: rgba(31, 58, 95, 0.08); }
+        .header-user {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .header-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+        }
+        .header-dropdown {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            right: 0;
+            min-width: 180px;
+            background: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 0.5rem;
+            display: none;
+            z-index: 10;
+        }
+        .header-dropdown.show { display: block; }
+        .header-dropdown a {
+            display: block;
+            padding: 0.6rem 0.75rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.9375rem;
+            border-radius: 8px;
+        }
+        .header-dropdown a:hover { background: var(--bg); color: var(--primary); }
         
-        .main { max-width: 1000px; margin: 3rem auto; padding: 0 1.5rem; }
+        .main { position: relative; z-index: 1; max-width: 1000px; margin: 3rem auto; padding: 0 1.5rem; }
         .grid-checkout { display: grid; grid-template-columns: 1fr 380px; gap: 2rem; }
         
         .card { background: var(--card); border-radius: 16px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
@@ -61,9 +140,20 @@
         .preview-info { flex: 1; }
         .preview-name { font-weight: 600; font-size: 1rem; color: var(--primary); margin-bottom: 0.25rem; }
         .preview-sku { font-size: 0.75rem; color: var(--text-secondary); }
+        @media (max-width: 900px) {
+            .grid-checkout { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .header-nav { display: none; }
+        }
+        @media (max-width: 480px) {
+            .main { margin: 1.5rem auto; padding: 0 1rem; }
+            .card { padding: 1.25rem; }
+        }
     </style>
 </head>
 <body>
+    <div class="page-bg"></div>
     @php
         $id = request()->query('id');
         $products = [
@@ -80,11 +170,27 @@
         $productImg = strtolower(explode(' ', trim($p['name']))[0]) . '.png';
     @endphp
     <header class="header">
-        <a href="/" class="logo">MACUIN</a>
-        <nav class="nav">
-            <a href="/catalogo">Catálogo</a>
-            <a href="/pedidos">Mis Pedidos</a>
-        </nav>
+        <div class="header-left">
+            <a href="{{ url('/dashboard') }}">
+                <img src="{{ asset('images/logo_macuin.png') }}" alt="MACUIN" class="header-logo" onerror="this.parentElement.innerHTML='<span style=\'font-weight:700;color:var(--primary);font-size:1.25rem;\'>MACUIN</span>'">
+            </a>
+            <nav class="header-nav">
+                <a href="{{ url('/dashboard') }}">Dashboard</a>
+                <a href="{{ url('/catalogo') }}">Catálogo</a>
+                <a href="{{ url('/pedidos') }}" class="active">Mis pedidos</a>
+                <a href="{{ url('/perfil') }}">Perfil</a>
+            </nav>
+        </div>
+        <div class="header-user">
+            <button type="button" class="header-avatar" id="user-menu-btn" aria-expanded="false" aria-haspopup="true">
+                {{ strtoupper(substr(optional(auth()->user())->name ?? 'Usuario', 0, 1)) }}
+            </button>
+            <div class="header-dropdown" id="user-dropdown" role="menu">
+                <a href="{{ url('/perfil') }}">Mi perfil</a>
+                <a href="{{ url('/perfil/configuracion') }}">Configuración</a>
+                <a href="{{ url('/login') }}">Cerrar sesión</a>
+            </div>
+        </div>
     </header>
 
     <main class="main">
@@ -169,5 +275,19 @@
             </div>
         </div>
     </main>
+
+    <script>
+        document.getElementById('user-menu-btn').addEventListener('click', function() {
+            var d = document.getElementById('user-dropdown');
+            d.classList.toggle('show');
+            this.setAttribute('aria-expanded', d.classList.contains('show'));
+        });
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.header-user')) {
+                document.getElementById('user-dropdown').classList.remove('show');
+                document.getElementById('user-menu-btn').setAttribute('aria-expanded', 'false');
+            }
+        });
+    </script>
 </body>
 </html>

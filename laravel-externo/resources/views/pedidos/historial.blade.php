@@ -392,7 +392,7 @@
                 <a href="{{ url('/dashboard') }}">Dashboard</a>
                 <a href="{{ url('/catalogo') }}">Catálogo</a>
                 <a href="{{ url('/pedidos') }}" class="active">Mis pedidos</a>
-                <a href="#">Perfil</a>
+                <a href="{{ url('/perfil') }}">Perfil</a>
             </nav>
         </div>
         <div class="header-user">
@@ -400,8 +400,8 @@
                 {{ strtoupper(substr(optional(auth()->user())->name ?? 'U', 0, 1)) }}
             </button>
             <div class="header-dropdown" id="user-dropdown">
-                <a href="#">Mi perfil</a>
-                <a href="#">Configuración</a>
+                <a href="{{ url('/perfil') }}">Mi perfil</a>
+                <a href="{{ url('/perfil/configuracion') }}">Configuración</a>
                 <a href="{{ url('/login') }}">Cerrar sesión</a>
             </div>
         </div>
@@ -426,12 +426,6 @@
                 <h1>Mis pedidos</h1>
                 <p>Consulta y gestiona todo el historial de tus pedidos</p>
             </div>
-            <a href="{{ url('/pedidos/crear') }}" class="btn-new">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Nuevo pedido
-            </a>
         </div>
 
         {{-- Stats --}}

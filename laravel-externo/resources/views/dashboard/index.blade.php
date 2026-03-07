@@ -329,8 +329,8 @@
             <nav class="header-nav">
                 <a href="{{ url('/dashboard') }}" class="active">Dashboard</a>
                 <a href="{{ url('/catalogo') }}">Catálogo</a>
-                <a href="{{ url('/catalogo') }}">Mis pedidos</a>
-                <a href="#">Perfil</a>
+                <a href="{{ url('/pedidos') }}">Mis pedidos</a>
+                <a href="{{ url('/perfil') }}">Perfil</a>
             </nav>
         </div>
         <div class="header-user">
@@ -338,8 +338,8 @@
                 {{ strtoupper(substr(optional(auth()->user())->name ?? 'Usuario', 0, 1)) }}
             </button>
             <div class="header-dropdown" id="user-dropdown" role="menu">
-                <a href="#">Mi perfil</a>
-                <a href="#">Configuración</a>
+                <a href="{{ url('/perfil') }}">Mi perfil</a>
+                <a href="{{ url('/perfil/configuracion') }}">Configuración</a>
                 <a href="{{ url('/login') }}">Cerrar sesión</a>
             </div>
         </div>

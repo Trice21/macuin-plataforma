@@ -139,20 +139,36 @@
     </style>
 </head>
 <body>
+    {% set is_admin_path = request.path.startswith('/admin') %}
     <aside class="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-logo">MACUIN</div>
         </div>
         <nav class="sidebar-nav">
-            <a href="/dashboard" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
-                <i class="fas fa-th-large"></i> Dashboard
-            </a>
-            <a href="/pedidos" class="nav-item {% if active_page == 'pedidos' %}active{% endif %}">
-                <i class="fas fa-shopping-cart"></i> Pedidos
-            </a>
-            <a href="/reportes" class="nav-item {% if active_page == 'reportes' %}active{% endif %}">
-                <i class="fas fa-chart-bar"></i> Reportes
-            </a>
+            {% if is_admin_path %}
+                <a href="/admin/dashboard" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-th-large"></i> Dashboard
+                </a>
+                <a href="/admin/autopartes" class="nav-item {% if active_page == 'autopartes' %}active{% endif %}">
+                    <i class="fas fa-cogs"></i> Autopartes
+                </a>
+                <a href="/admin/inventario" class="nav-item {% if active_page == 'inventario' %}active{% endif %}">
+                    <i class="fas fa-boxes-stacked"></i> Inventario
+                </a>
+                <a href="/admin/reportes" class="nav-item {% if active_page == 'reportes' %}active{% endif %}">
+                    <i class="fas fa-chart-bar"></i> Reportes
+                </a>
+                <a href="/admin/usuarios" class="nav-item {% if active_page == 'usuarios' %}active{% endif %}">
+                    <i class="fas fa-users"></i> Usuarios
+                </a>
+            {% else %}
+                <a href="/dashboard" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-th-large"></i> Dashboard
+                </a>
+                <a href="/pedidos" class="nav-item {% if active_page == 'pedidos' %}active{% endif %}">
+                    <i class="fas fa-shopping-cart"></i> Pedidos
+                </a>
+            {% endif %}
         </nav>
         <div class="sidebar-footer">
             <a href="/login" class="nav-item">

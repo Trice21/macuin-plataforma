@@ -9,10 +9,12 @@ def index():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("admin_dashboard"))
     return render_template("auth/login.html")
 
 
+@app.route("/admin")
+@app.route("/admin/dashboard", endpoint="admin_dashboard")
 @app.route("/dashboard")
 def dashboard():
     return render_template("admin/dashboard.html", active_page='dashboard')
@@ -25,18 +27,22 @@ def pedidos():
 def pedido_detalle(pedido_id):
     return render_template("employee/pedido_detalle.html", pedido_id=pedido_id, active_page='pedidos')
 
+@app.route("/admin/reportes", endpoint="admin_reportes")
 @app.route("/reportes")
 def reportes():
     return render_template("admin/reportes.html", active_page='reportes')
 
+@app.route("/admin/autopartes", endpoint="admin_autopartes")
 @app.route("/autopartes")
 def autopartes():
     return render_template("admin/autopartes.html", active_page='autopartes')
 
+@app.route("/admin/inventario", endpoint="admin_inventario")
 @app.route("/inventario")
 def inventario():
     return render_template("admin/inventario.html", active_page='inventario')
 
+@app.route("/admin/usuarios", endpoint="admin_usuarios")
 @app.route("/usuarios")
 def usuarios():
     return render_template("admin/usuarios.html", active_page='usuarios')

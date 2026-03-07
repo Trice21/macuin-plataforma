@@ -209,6 +209,33 @@
             transform: translateY(1px);
         }
 
+        .forgot-password {
+            margin-top: 1rem;
+            padding: 0.95rem 1rem;
+            border-radius: 12px;
+            background: rgba(74, 111, 165, 0.06);
+            border: 1px solid rgba(74, 111, 165, 0.12);
+            text-align: center;
+        }
+
+        .forgot-password p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.35rem;
+        }
+
+        .forgot-password a {
+            color: var(--secondary);
+            font-size: 0.9375rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .forgot-password a:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
         .login-footer {
             text-align: center;
             margin-top: 1.75rem;
@@ -296,6 +323,10 @@
 
                 <button type="submit" class="btn-primary">Entrar</button>
             </form>
+
+            <div class="forgot-password">
+                <a href="{{ url('/recuperar-password') }}">¿Olvidaste tu contraseña?</a>
+            </div>
 
             <p class="login-footer">
                 ¿No tienes cuenta? <a href="{{ url('/registro') }}">Crear cuenta</a>
