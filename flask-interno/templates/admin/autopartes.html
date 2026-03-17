@@ -117,10 +117,10 @@
     <hr class="separador-titulo">
 
     <div style="text-align: right; margin-bottom: 20px;">
-        <button class="btn-agregar">+ Agregar Nueva Autoparte</button>
+        <a href="{{ url_for('admin_autopartes_crear') }}" class="btn-agregar" style="text-decoration: none; display: inline-block;">+ Agregar Nueva Autoparte</a>
     </div>
 
-    <div class="card">
+    <div class="card p-0 overflow-hidden">
 
         <div class="tabla-autopartes">
             <table class="table mb-0 text-center">
@@ -148,8 +148,8 @@
                             <span class="badge-stock stock-ok">Disponible</span>
                         </td>
                         <td>
-                            <button class="btn-editar">Editar</button>
-                            <button class="btn-eliminar">Eliminar</button>
+                            <a href="{{ url_for('admin_autopartes_editar', id=1) }}" class="btn-editar" style="text-decoration: none;">Editar</a>
+                            <button class="btn-eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal">Eliminar</button>
                         </td>
                     </tr>
 
@@ -163,8 +163,8 @@
                             <span class="badge-stock stock-bajo">Bajo Stock</span>
                         </td>
                         <td>
-                            <button class="btn-editar">Editar</button>
-                            <button class="btn-eliminar">Eliminar</button>
+                            <a href="{{ url_for('admin_autopartes_editar', id=2) }}" class="btn-editar" style="text-decoration: none;">Editar</a>
+                            <button class="btn-eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal">Eliminar</button>
                         </td>
                     </tr>
                 </tbody>
@@ -175,5 +175,33 @@
     </div>
 
 </div>
+
+<!-- Modal Eliminar -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="deleteModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que deseas eliminar esta autoparte? Esta acción no se puede deshacer.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDelete()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    function confirmDelete() {
+        alert('¡Autoparte eliminada exitosamente!');
+        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+    }
+</script>
+{% endblock %}
 
 {% endblock %}

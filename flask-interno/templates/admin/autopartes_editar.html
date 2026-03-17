@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+
+{% block title %}Editar Autoparte — MACUIN{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="m-0" style="font-weight: 700; color: var(--primary);">Editar Autoparte #{{ id }}</h2>
+            <p class="text-secondary m-0">Actualiza la información del producto en el catálogo.</p>
+        </div>
+        <a href="{{ url_for('admin_autopartes') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Volver al Catálogo
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm p-4">
+        <form action="{{ url_for('admin_autopartes') }}" method="GET" class="row g-4">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Nombre de la Autoparte</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-cog text-secondary"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-0" value="Filtro de Aceite">
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Categoría</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-tags text-secondary"></i></span>
+                    <select class="form-select border-start-0 ps-0">
+                        <option>Motor</option>
+                        <option selected>Suspensión</option>
+                        <option>Frenos</option>
+                        <option>Transmisión</option>
+                        <option>Eléctrico</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Marca</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-industry text-secondary"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-0" value="Bosch">
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Precio de Venta ($)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-dollar-sign text-secondary"></i></span>
+                    <input type="number" step="0.01" class="form-control border-start-0 ps-0" value="250.00">
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Stock Actual</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-cubes text-secondary"></i></span>
+                    <input type="number" class="form-control border-start-0 ps-0" value="15">
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Ubicación en Almacén</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-map-marker-alt text-secondary"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-0" value="Estante B-05">
+                </div>
+            </div>
+
+            <div class="col-12 mt-5">
+                <div class="d-flex gap-3">
+                    <button type="submit" class="btn btn-primary px-5 py-2 shadow-sm" style="background-color: var(--primary); border: none;">
+                        <i class="fas fa-sync me-2"></i> Actualizar Autoparte
+                    </button>
+                    <button type="button" class="btn btn-outline-danger px-4 py-2" onclick="confirmDelete()">
+                        <i class="fas fa-trash me-2"></i> Eliminar Autoparte
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function confirmDelete() {
+        if(confirm('¿Estás seguro de que deseas eliminar esta autoparte permanentemente?')) {
+            window.location.href = "{{ url_for('admin_autopartes') }}";
+        }
+    }
+</script>
+{% endblock %}

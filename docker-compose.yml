@@ -17,7 +17,9 @@ services:
       - DB_USERNAME=macuin_user
       - DB_PASSWORD=macuin_password
     volumes:
-      - ./laravel-externo:/var/www/html
+      - ./laravel-externo:/var/www/html:cached
+      - laravel-vendor:/var/www/html/vendor
+      - laravel-node-modules:/var/www/html/node_modules
     depends_on:
       - db
 
@@ -51,3 +53,5 @@ services:
 
 volumes:
   mysql-data:
+  laravel-vendor:
+  laravel-node-modules:

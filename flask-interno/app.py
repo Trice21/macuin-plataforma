@@ -37,6 +37,14 @@ def reportes():
 def autopartes():
     return render_template("admin/autopartes.html", active_page='autopartes')
 
+@app.route("/admin/autopartes/crear", endpoint="admin_autopartes_crear")
+def autopartes_crear():
+    return render_template("admin/autopartes_crear.html", active_page='autopartes')
+
+@app.route("/admin/autopartes/editar/<int:id>", endpoint="admin_autopartes_editar")
+def autopartes_editar(id):
+    return render_template("admin/autopartes_editar.html", id=id, active_page='autopartes')
+
 @app.route("/admin/inventario", endpoint="admin_inventario")
 @app.route("/inventario")
 def inventario():

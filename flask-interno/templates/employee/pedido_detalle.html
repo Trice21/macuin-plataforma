@@ -1,6 +1,64 @@
 {% extends "layout.html" %}
 
 {% block title %}Detalle de Pedido #{{ pedido_id }}{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const badge = document.querySelector('.badge');
+        
+        // Botón Marcar Recibido
+        const btnRecibido = document.querySelector('.btn-info');
+        if (btnRecibido) {
+            btnRecibido.addEventListener('click', function() {
+                badge.className = 'badge badge-info';
+                badge.textContent = 'Recibido';
+                alert('Estatus actualizado a: Recibido');
+            });
+        }
+
+        // Botón Marcar en Proceso
+        const btnProceso = document.querySelector('.btn-warning');
+        if (btnProceso) {
+            btnProceso.addEventListener('click', function() {
+                badge.className = 'badge badge-pending';
+                badge.textContent = 'En Proceso';
+                alert('Estatus actualizado a: En Proceso');
+            });
+        }
+
+        // Botón Marcar Enviado
+        const btnEnviado = document.querySelector('.btn-secondary');
+        if (btnEnviado) {
+            btnEnviado.addEventListener('click', function() {
+                badge.className = 'badge badge-secondary';
+                badge.style.backgroundColor = '#4A6FA5';
+                badge.style.color = 'white';
+                badge.textContent = 'Enviado';
+                alert('Estatus actualizado a: Enviado');
+            });
+        }
+
+        // Botón Completar
+        const btnCompletar = document.querySelector('.btn-success');
+        if (btnCompletar) {
+            btnCompletar.addEventListener('click', function() {
+                badge.className = 'badge badge-success';
+                badge.textContent = 'Completado';
+                alert('¡Pedido marcado como completado!');
+            });
+        }
+
+        // Botón Imprimir (PDF Mock)
+        const btnImprimir = document.querySelector('.btn-outline:not([href])');
+        if (btnImprimir) {
+            btnImprimir.addEventListener('click', function() {
+                window.print();
+            });
+        }
+    });
+</script>
+{% endblock %}
 {% block header_title %}Detalle de Pedido #{{ pedido_id }}{% endblock %}
 
 {% block extra_css %}
@@ -95,6 +153,8 @@
     </div>
     <div style="display: flex; gap: 0.75rem;">
         <button class="btn-action btn-outline"><i class="fas fa-print"></i> Imprimir</button>
+        <button class="btn-action btn-info" style="background-color: var(--secondary); color: white;"><i class="fas fa-hand-holding"></i> Marcar Recibido</button>
+        <button class="btn-action btn-warning" style="background-color: var(--warning); color: white;"><i class="fas fa-spinner"></i> Marcar en Proceso</button>
         <button class="btn-action btn-secondary"><i class="fas fa-truck"></i> Marcar Enviado</button>
         <button class="btn-action btn-success"><i class="fas fa-check"></i> Completar</button>
     </div>

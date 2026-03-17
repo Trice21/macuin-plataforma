@@ -10,14 +10,14 @@ if [ ! -f ".env" ]; then
     cp .env.example .env
 fi
 
-# 2. Instalar dependencias si no existen (Caso: clonado nuevo)
-if [ ! -d "vendor" ]; then
-    echo "Instalando dependencias de PHP (Composer)..."
-    composer install --no-interaction --no-plugins --no-scripts --prefer-dist
+# 2. Instalar dependencias si no existen (Caso: clonado nuevo o volumen vacío)
+if [ ! -f "vendor/autoload.php" ]; then
+    echo "Dependencias de Composer no encontradas. Instalando..."
+    composer install --no-interaction --prefer-dist
 fi
 
-if [ ! -d "node_modules" ]; then
-    echo "Instalando dependencias de Node (NPM)..."
+if [ ! -f "node_modules/.bin/vite" ]; then
+    echo "Dependencias de Node no encontradas. Instalando..."
     npm install
     echo "Compilando assets con Vite..."
     npm run build
@@ -49,19 +49,23 @@ if [ "$DB_READY" != true ]; then
     exit 1
 fi
 
-# 5. Base de Datos y Cache
+# 5. Base de Datos y Optimización
 echo "Ejecutando migraciones..."
 php artisan migrate --force
 
-echo "Limpiando caches..."
-php artisan cache:clear
-php artisan config:clear
-php artisan view:clear
+echo "Optimizando Laravel (Caché de configuración, rutas y vistas)..."
+# Primero limpiamos para evitar conflictos y luego cacheamos
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
 
 # 6. Permisos (Vital para que Apache pueda escribir)
 echo "Ajustando permisos de carpetas..."
-chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+# Intentar ajustar permisos solo si el directorio existe
+if [ -d "storage" ]; then
+    chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+    chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+fi
 
-echo "--- Todo listo. Iniciando servidor web Apache ---"
+echo "--- Todo listo. El servidor debería ser mucho más rápido ahora. ---"
 exec apache2-foreground

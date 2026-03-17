@@ -14,8 +14,18 @@ RUN apt-get update && apt-get install -y \
     npm \
     libzip-dev \
     dos2unix \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip opcache \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Configurar OpCache para mejor rendimiento
+RUN { \
+    echo 'opcache.memory_consumption=128'; \
+    echo 'opcache.interned_strings_buffer=8'; \
+    echo 'opcache.max_accelerated_files=4000'; \
+    echo 'opcache.revalidate_freq=2'; \
+    echo 'opcache.fast_shutdown=1'; \
+    echo 'opcache.enable_cli=1'; \
+    } > /usr/local/etc/php/conf.d/opcache-recommended.ini
 
 # Habilitar el módulo mod_rewrite de Apache para Laravel
 RUN a2enmod rewrite

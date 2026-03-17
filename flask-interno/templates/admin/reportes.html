@@ -1,6 +1,23 @@
 {% extends "layout.html" %}
 
 {% block title %}Reportes de Gestión{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mock Export Functionality
+        const exportBtns = document.querySelectorAll('.export-btn');
+        exportBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                alert('Generando reporte para exportación...');
+                setTimeout(() => {
+                    window.print();
+                }, 500);
+            });
+        });
+    });
+</script>
+{% endblock %}
 {% block header_title %}Reportes y Análisis{% endblock %}
 
 {% block extra_css %}
@@ -71,8 +88,8 @@
 <div class="reports-grid">
     <div class="card">
         <div class="report-card-header">
-            <h3 style="font-size: 1rem; font-weight: 600;">Ventas Semanales</h3>
-            <button class="export-btn"><i class="fas fa-download"></i> Exportar</button>
+            <h3 style="font-size: 1rem; font-weight: 600; color: var(--primary);">Reporte de Ventas (Ventas Semanales)</h3>
+            <button class="export-btn"><i class="fas fa-download"></i> Exportar Ventas</button>
         </div>
         <div class="chart-container">
             <div class="bar" style="height: 40%;">
@@ -108,8 +125,8 @@
 
     <div class="card">
         <div class="report-card-header">
-            <h3 style="font-size: 1rem; font-weight: 600;">Estado de Pedidos</h3>
-            <button class="export-btn"><i class="fas fa-download"></i> Exportar</button>
+            <h3 style="font-size: 1rem; font-weight: 600; color: var(--primary);">Reporte de Pedidos Clientes (Estatus)</h3>
+            <button class="export-btn"><i class="fas fa-download"></i> Exportar Pedidos</button>
         </div>
         <div style="padding: 1rem 0;">
             <div style="margin-bottom: 1.5rem;">
@@ -117,7 +134,7 @@
                     <span style="font-size: 0.875rem; color: var(--text-secondary);">Completados</span>
                     <span style="font-size: 0.875rem; font-weight: 600;">75%</span>
                 </div>
-                <div style="width: 100%; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden;">
+                <div style="width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
                     <div style="width: 75%; height: 100%; background: var(--success);"></div>
                 </div>
             </div>
@@ -126,7 +143,7 @@
                     <span style="font-size: 0.875rem; color: var(--text-secondary);">En Proceso</span>
                     <span style="font-size: 0.875rem; font-weight: 600;">15%</span>
                 </div>
-                <div style="width: 100%; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden;">
+                <div style="width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
                     <div style="width: 15%; height: 100%; background: var(--warning);"></div>
                 </div>
             </div>
@@ -135,7 +152,7 @@
                     <span style="font-size: 0.875rem; color: var(--text-secondary);">Pendientes</span>
                     <span style="font-size: 0.875rem; font-weight: 600;">10%</span>
                 </div>
-                <div style="width: 100%; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden;">
+                <div style="width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
                     <div style="width: 10%; height: 100%; background: var(--danger);"></div>
                 </div>
             </div>
@@ -143,8 +160,47 @@
     </div>
 </div>
 
+<div class="card mb-4">
+    <div class="report-card-header">
+        <h3 style="font-size: 1.125rem; font-weight: 600; color: var(--primary);">Análisis de Ventas por Categoría</h3>
+        <button class="export-btn"><i class="fas fa-file-csv"></i> CSV</button>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Categoría</th>
+                    <th>Unidades Vendidas</th>
+                    <th>Ingresos</th>
+                    <th>Crecimiento</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Motor</strong></td>
+                    <td>452</td>
+                    <td>$18,450.00</td>
+                    <td><span style="color: var(--success);"><i class="fas fa-caret-up"></i> 8.4%</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Frenos</strong></td>
+                    <td>310</td>
+                    <td>$12,120.00</td>
+                    <td><span style="color: var(--success);"><i class="fas fa-caret-up"></i> 12.1%</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Suspensión</strong></td>
+                    <td>215</td>
+                    <td>$9,240.00</td>
+                    <td><span style="color: var(--danger);"><i class="fas fa-caret-down"></i> 2.4%</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
 <div class="card">
-    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1.5rem;">Resumen Mensual</h3>
+    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1.5rem; color: var(--primary);">Resumen Mensual de Gestión</h3>
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;">
         <div>
             <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Ingresos Totales</p>

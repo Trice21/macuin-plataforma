@@ -640,18 +640,45 @@
     </main>
 
     <script>
-        (function () {
-            document.getElementById('user-menu-btn').addEventListener('click', function () {
+        (function() {
+            // User dropdown toggle
+            document.getElementById('user-menu-btn').addEventListener('click', function() {
                 var d = document.getElementById('user-dropdown');
                 d.classList.toggle('show');
                 this.setAttribute('aria-expanded', d.classList.contains('show'));
             });
-            document.addEventListener('click', function (e) {
+            document.addEventListener('click', function(e) {
                 if (!e.target.closest('.header-user')) {
                     document.getElementById('user-dropdown').classList.remove('show');
                     document.getElementById('user-menu-btn').setAttribute('aria-expanded', 'false');
                 }
             });
+
+            // Mock PDF Download / Print
+            const btnDownload = document.querySelector('.btn-outline');
+            if (btnDownload && btnDownload.textContent.includes('Descargar PDF')) {
+                btnDownload.addEventListener('click', function() {
+                    alert('Generando documento PDF del pedido...');
+                    setTimeout(function() {
+                        window.print();
+                    }, 500);
+                });
+            }
+
+            // Mock Cancel Order
+            const btnCancel = document.querySelector('.btn-outline[style*="color:var(--error)"]');
+            if (btnCancel) {
+                btnCancel.addEventListener('click', function() {
+                    if (confirm('¿Estás seguro de que deseas cancelar este pedido?')) {
+                        const badge = document.querySelector('.badge-warning');
+                        if (badge) {
+                            badge.className = 'badge badge-error';
+                            badge.textContent = 'Cancelado';
+                            alert('El pedido ha sido cancelado.');
+                        }
+                    }
+                });
+            }
         })();
     </script>
 </body>
