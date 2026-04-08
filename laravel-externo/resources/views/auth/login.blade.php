@@ -273,7 +273,7 @@
     <div class="login-wrap">
         <div class="login-card">
             <img src="{{ asset('images/logo_macuin.png') }}" alt="MACUIN" class="login-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-            
+
 
             <h1 class="login-title">Iniciar sesión</h1>
             <p class="login-subtitle">Accede a tu cuenta del portal de repuestos</p>
@@ -317,11 +317,9 @@
                     @enderror
                 </div>
 
-                @error('login')
-                    <p class="form-error" style="margin-bottom:1rem;">{{ $message }}</p>
-                @enderror
-
-                <button type="submit" class="btn-primary">Entrar</button>
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <button type="submit" class="btn-primary">Entrar</button>
+                </div>
             </form>
 
             <div class="forgot-password">

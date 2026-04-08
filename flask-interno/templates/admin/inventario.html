@@ -68,21 +68,21 @@
         <div class="col-md-4">
             <div class="card-resumen bg-azul">
                 <h5>Total Productos</h5>
-                <h3>45</h3>
+                <h3>{{ stats.total }}</h3>
             </div>
         </div>
 
         <div class="col-md-4">
             <div class="card-resumen bg-amarillo">
                 <h5>Bajo Stock</h5>
-                <h3>5</h3>
+                <h3>{{ stats.bajo_stock }}</h3>
             </div>
         </div>
 
         <div class="col-md-4">
             <div class="card-resumen bg-rojo">
                 <h5>Agotados</h5>
-                <h3>2</h3>
+                <h3>{{ stats.agotados }}</h3>
             </div>
         </div>
     </div>
@@ -93,31 +93,35 @@
             <table class="table mb-0">
                 <thead>
                     <tr>
+                        <th>ID</th>
                         <th>Autoparte</th>
+                        <th>Categoría</th>
                         <th>Stock Actual</th>
-                        <th>Stock Mínimo</th>
                         <th>Estado</th>
                     </tr>
                 </thead>
                 <tbody>
+                    {% for p in autoparts %}
                     <tr>
-                        <td>Filtro de Aceite</td>
-                        <td>20</td>
-                        <td>5</td>
-                        <td><span class="badge-stock stock-ok">Disponible</span></td>
+                        <td>{{ p.id }}</td>
+                        <td>{{ p.name }}</td>
+                        <td>{{ p.category }}</td>
+                        <td>{{ p.stock }}</td>
+                        <td>
+                            {% if p.stock > 10 %}
+                                <span class="badge-stock stock-ok">Disponible</span>
+                            {% elif p.stock > 0 %}
+                                <span class="badge-stock stock-bajo">Bajo Stock</span>
+                            {% else %}
+                                <span class="badge-stock stock-agotado">Agotado</span>
+                            {% endif %}
+                        </td>
                     </tr>
+                    {% else %}
                     <tr>
-                        <td>Bujía NGK</td>
-                        <td>3</td>
-                        <td>5</td>
-                        <td><span class="badge-stock stock-bajo">Bajo Stock</span></td>
+                        <td colspan="5">No hay refacciones o datos de inventario disponibles.</td>
                     </tr>
-                    <tr>
-                        <td>Radiador</td>
-                        <td>0</td>
-                        <td>2</td>
-                        <td><span class="badge-stock stock-agotado">Agotado</span></td>
-                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>

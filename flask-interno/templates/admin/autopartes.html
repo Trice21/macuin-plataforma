@@ -130,7 +130,6 @@
                         <th>ID</th>
                         <th>Nombre</th>
                         <th>Categoría</th>
-                        <th>Marca</th>
                         <th>Precio</th>
                         <th>Stock</th>
                         <th>Acciones</th>
@@ -138,35 +137,27 @@
                 </thead>
 
                 <tbody>
+                    {% for part in autoparts %}
                     <tr>
-                        <td>1</td>
-                        <td><strong>Filtro de Aceite</strong></td>
-                        <td>Motor</td>
-                        <td>Bosch</td>
-                        <td>$250</td>
+                        <td>{{ part.id }}</td>
+                        <td><strong>{{ part.name }}</strong></td>
+                        <td>{{ part.category }}</td>
+                        <td>${{ part.price }}</td>
                         <td>
-                            <span class="badge-stock stock-ok">Disponible</span>
+                            <span class="badge-stock {% if part.stock > 10 %}stock-ok{% else %}stock-bajo{% endif %}">
+                                {{ part.stock }} units
+                            </span>
                         </td>
                         <td>
-                            <a href="{{ url_for('admin_autopartes_editar', id=1) }}" class="btn-editar" style="text-decoration: none;">Editar</a>
-                            <button class="btn-eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal">Eliminar</button>
+                            <a href="{{ url_for('admin_autopartes_editar', id=part.id) }}" class="btn-editar" style="text-decoration: none;">Editar</a>
+                            <a href="{{ url_for('autopartes_eliminar', id=part.id) }}" class="btn-eliminar" style="text-decoration: none;" onclick="return confirm('¿Eliminar autoparte?')">Eliminar</a>
                         </td>
                     </tr>
-
+                    {% else %}
                     <tr>
-                        <td>2</td>
-                        <td><strong>Bujía NGK</strong></td>
-                        <td>Encendido</td>
-                        <td>NGK</td>
-                        <td>$120</td>
-                        <td>
-                            <span class="badge-stock stock-bajo">Bajo Stock</span>
-                        </td>
-                        <td>
-                            <a href="{{ url_for('admin_autopartes_editar', id=2) }}" class="btn-editar" style="text-decoration: none;">Editar</a>
-                            <button class="btn-eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal">Eliminar</button>
-                        </td>
+                        <td colspan="6">No hay autopartes registradas.</td>
                     </tr>
+                    {% endfor %}
                 </tbody>
 
             </table>

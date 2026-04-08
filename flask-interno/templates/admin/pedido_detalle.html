@@ -1,0 +1,95 @@
+{% extends "layout.html" %}
+
+{% block title %}Detalle del Pedido #{{ order['id'] }}{% endblock %}
+{% block header_title %}Detalle del Pedido #{{ order['id'] }}{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-primary fw-bold mb-4">Productos en el Pedido</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-end">Precio Unit.</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order['items'] %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-primary">{{ item['autopart_name'] }}</div>
+                                    <small class="text-muted">ID: {{ item['autopart_id'] }}</small>
+                                </td>
+                                <td class="text-center">{{ item['quantity'] }}</td>
+                                <td class="text-end">${{ "%.2f"|format(item['unit_price']) }}</td>
+                                <td class="text-end fw-bold">${{ "%.2f"|format(item['quantity'] * item['unit_price']) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="bg-light">
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">TOTAL:</td>
+                                <td class="text-end fw-bold text-primary" style="font-size: 1.2rem;">${{ "%.2f"|format(order['total_price']) }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('admin_pedidos') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Volver a la lista
+            </a>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-primary fw-bold mb-4">Información del Pedido</h5>
+                
+                <div class="mb-3">
+                    <label class="text-muted small d-block">Cliente</label>
+                    <span class="fw-bold">{{ order['user_name'] }}</span>
+                    <small class="text-muted d-block">(ID Usuario: {{ order['user_id'] }})</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="text-muted small d-block">Fecha de Creación</label>
+                    <span class="fw-bold">{{ order['created_at'][:16]|replace('T', ' ') }}</span>
+                </div>
+
+                <div class="mb-4">
+                    <label class="text-muted small d-block">Estado Actual</label>
+                    <span class="badge {% if order['status'] == 'pending' %}badge-pending{% elif order['status'] == 'delivered' %}badge-success{% else %}badge-info{% endif %} p-2" style="font-size: 0.9rem;">
+                        {{ order['status']|upper }}
+                    </span>
+                </div>
+
+                <hr>
+
+                <h6 class="fw-bold mb-3">Actualizar Estado</h6>
+                <form action="{{ url_for('admin_pedido_status', id=order['id']) }}" method="POST">
+                    <div class="mb-3">
+                        <select name="status" class="form-select form-select-sm">
+                            <option value="pending" {% if order['status'] == 'pending' %}selected{% endif %}>Pendiente</option>
+                            <option value="processing" {% if order['status'] == 'processing' %}selected{% endif %}>Procesando</option>
+                            <option value="shipped" {% if order['status'] == 'shipped' %}selected{% endif %}>Enviado</option>
+                            <option value="delivered" {% if order['status'] == 'delivered' %}selected{% endif %}>Entregado</option>
+                            <option value="cancelled" {% if order['status'] == 'cancelled' %}selected{% endif %}>Cancelado</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm w-100">Actualizar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

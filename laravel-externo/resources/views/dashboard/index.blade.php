@@ -340,32 +340,18 @@
             <div class="header-dropdown" id="user-dropdown" role="menu">
                 <a href="{{ url('/perfil') }}">Mi perfil</a>
                 <a href="{{ url('/perfil/configuracion') }}">Configuración</a>
-                <a href="{{ url('/login') }}">Cerrar sesión</a>
+                <a href="{{ url('/logout') }}">Cerrar sesión</a>
             </div>
         </div>
     </header>
 
     <main class="main">
-        @php
-            $userName = optional(auth()->user())->name ?? 'Usuario';
-            $activeOrders = [
-                ['id' => 'PED-2847', 'date' => '25 Feb 2025', 'status' => 'warning', 'status_label' => 'En proceso', 'total' => '$1,240.00'],
-                ['id' => 'PED-2812', 'date' => '20 Feb 2025', 'status' => 'success', 'status_label' => 'Entregado', 'total' => '$890.50'],
-            ];
-            $recentOrders = [
-                ['id' => 'PED-2847', 'date' => '25 Feb 2025', 'status' => 'warning', 'status_label' => 'En proceso', 'total' => '$1,240.00'],
-                ['id' => 'PED-2812', 'date' => '20 Feb 2025', 'status' => 'success', 'status_label' => 'Entregado', 'total' => '$890.50'],
-                ['id' => 'PED-2798', 'date' => '15 Feb 2025', 'status' => 'error', 'status_label' => 'Cancelado', 'total' => '$320.00'],
-            ];
-            $hasActiveOrders = count($activeOrders) > 0;
-        @endphp
-
         <section class="welcome">
-            <h1>Bienvenido, {{ $userName }}</h1>
-            <p>Aquí puedes gestionar tus pedidos y explorar autopartes</p>
+            <h1>Bienvenido, {{ auth()->user()->name ?? 'Usuario' }}</h1>
+            <p>Desde tu panel puedes gestionar tus pedidos, ver el catálogo de autopartes y actualizar tu información de perfil.</p>
             <div class="welcome-btns">
-                <a href="{{ url('/catalogo') }}" class="btn-primary">Explorar catálogo</a>
-                <a href="{{ url('/pedidos') }}" class="btn-secondary">Ver todos mis pedidos</a>
+                <a href="{{ url('/pedidos/crear') }}" class="btn-primary">Nuevo pedido</a>
+                <a href="{{ url('/catalogo') }}" class="btn-secondary">Ver catálogo</a>
             </div>
         </section>
 
@@ -373,18 +359,35 @@
             <div>
                 <section class="card">
                     <h2 class="section-title">Pedidos activos</h2>
-                    @if($hasActiveOrders)
+                    @if($activeOrders->count() > 0)
                         <div class="active-orders-grid">
                             @foreach($activeOrders as $order)
+                                @php
+                                    $statusClass = match(strtolower($order->status)) {
+                                        'pending', 'processing' => 'warning',
+                                        'shipped' => 'info',
+                                        'delivered' => 'success',
+                                        'cancelled' => 'error',
+                                        default => 'secondary'
+                                    };
+                                    $statusLabel = match(strtolower($order->status)) {
+                                        'pending' => 'Pendiente',
+                                        'processing' => 'En proceso',
+                                        'shipped' => 'Enviado',
+                                        'delivered' => 'Entregado',
+                                        'cancelled' => 'Cancelado',
+                                        default => $order->status
+                                    };
+                                @endphp
                                 <div class="order-card">
                                     <div class="order-card-header">
-                                        <span class="order-card-id">{{ $order['id'] }}</span>
-                                        <span class="order-card-date">{{ $order['date'] }}</span>
+                                        <span class="order-card-id">PED-{{ $order->id }}</span>
+                                        <span class="order-card-date">{{ $order->created_at->format('d M Y') }}</span>
                                     </div>
-                                    <span class="badge badge-{{ $order['status'] }}">{{ $order['status_label'] }}</span>
+                                    <span class="badge badge-{{ $statusClass }}">{{ $statusLabel }}</span>
                                     <div class="order-card-meta">
-                                        <span class="order-card-total">{{ $order['total'] }}</span>
-                                        <a href="{{ url('/pedidos/' . str_replace('PED-', '', $order['id'])) }}" class="btn-link">Ver detalle</a>
+                                        <span class="order-card-total">${{ number_format($order->total_price, 2) }}</span>
+                                        <a href="{{ url('/pedidos/' . $order->id) }}" class="btn-link">Ver detalle</a>
                                     </div>
                                 </div>
                             @endforeach
@@ -396,7 +399,7 @@
                             </div>
                             <h3>No tienes pedidos activos</h3>
                             <p>Cuando realices un pedido, aparecerá aquí.</p>
-                            <a href="#" class="btn-primary">Explorar catálogo</a>
+                            <a href="{{ url('/catalogo') }}" class="btn-primary">Explorar catálogo</a>
                         </div>
                     @endif
                 </section>
@@ -405,23 +408,23 @@
                 <section class="card">
                     <h2 class="section-title">Acciones rápidas</h2>
                     <div class="quick-actions">
-                        <a href="#" class="quick-action">
+                        <a href="{{ url('/catalogo') }}" class="quick-action">
                             <div class="quick-action-icon">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                             </div>
                             <span>Explorar catálogo</span>
                         </a>
-                        <a href="#" class="quick-action">
+                        <a href="{{ url('/pedidos') }}" class="quick-action">
                             <div class="quick-action-icon">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                             </div>
-                            <span>Descargar comprobante</span>
+                            <span>Ver mis pedidos</span>
                         </a>
-                        <a href="#" class="quick-action">
+                        <a href="{{ url('/perfil') }}" class="quick-action">
                             <div class="quick-action-icon">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                             </div>
-                            <span>Contactar soporte</span>
+                            <span>Mi perfil</span>
                         </a>
                     </div>
                 </section>
@@ -443,38 +446,77 @@
                     </thead>
                     <tbody>
                         @foreach($recentOrders as $order)
+                            @php
+                                $statusClass = match(strtolower($order->status)) {
+                                    'pending', 'processing' => 'warning',
+                                    'shipped' => 'info',
+                                    'delivered' => 'success',
+                                    'cancelled' => 'error',
+                                    default => 'secondary'
+                                };
+                                $statusLabel = match(strtolower($order->status)) {
+                                    'pending' => 'Pendiente',
+                                    'processing' => 'En proceso',
+                                    'shipped' => 'Enviado',
+                                    'delivered' => 'Entregado',
+                                    'cancelled' => 'Cancelado',
+                                    default => $order->status
+                                };
+                            @endphp
                             <tr>
-                                <td><strong>{{ $order['id'] }}</strong></td>
-                                <td>{{ $order['date'] }}</td>
-                                <td><span class="badge badge-{{ $order['status'] }}">{{ $order['status_label'] }}</span></td>
-                                <td>{{ $order['total'] }}</td>
-                                <td><a href="{{ url('/pedidos/' . str_replace('PED-', '', $order['id'])) }}" class="btn-link">Ver detalle</a></td>
+                                <td><strong>PED-{{ $order->id }}</strong></td>
+                                <td>{{ $order->created_at->format('d M Y') }}</td>
+                                <td><span class="badge badge-{{ $statusClass }}">{{ $statusLabel }}</span></td>
+                                <td>${{ number_format($order->total_price, 2) }}</td>
+                                <td><a href="{{ url('/pedidos/' . $order->id) }}" class="btn-link">Ver detalle</a></td>
                             </tr>
                         @endforeach
+                        @if($recentOrders->count() == 0)
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No hay pedidos recientes.</td>
+                            </tr>
+                        @endif
                     </tbody>
                 </table>
             </div>
             <div class="orders-stacked">
                 @foreach($recentOrders as $order)
+                    @php
+                        $statusClass = match(strtolower($order->status)) {
+                            'pending', 'processing' => 'warning',
+                            'shipped' => 'info',
+                            'delivered' => 'success',
+                            'cancelled' => 'error',
+                            default => 'secondary'
+                        };
+                        $statusLabel = match(strtolower($order->status)) {
+                            'pending' => 'Pendiente',
+                            'processing' => 'En proceso',
+                            'shipped' => 'Enviado',
+                            'delivered' => 'Entregado',
+                            'cancelled' => 'Cancelado',
+                            default => $order->status
+                        };
+                    @endphp
                     <div class="order-row-card">
                         <div class="row">
                             <span class="label">ID</span>
-                            <span class="value">{{ $order['id'] }}</span>
+                            <span class="value">PED-{{ $order->id }}</span>
                         </div>
                         <div class="row">
                             <span class="label">Fecha</span>
-                            <span class="value">{{ $order['date'] }}</span>
+                            <span class="value">{{ $order->created_at->format('d M Y') }}</span>
                         </div>
                         <div class="row">
                             <span class="label">Estatus</span>
-                            <span><span class="badge badge-{{ $order['status'] }}">{{ $order['status_label'] }}</span></span>
+                            <span><span class="badge badge-{{ $statusClass }}">{{ $statusLabel }}</span></span>
                         </div>
                         <div class="row">
                             <span class="label">Total</span>
-                            <span class="value">{{ $order['total'] }}</span>
+                            <span class="value">${{ number_format($order->total_price, 2) }}</span>
                         </div>
                         <div class="row" style="margin-top:0.75rem;">
-                            <a href="{{ url('/pedidos/' . str_replace('PED-', '', $order['id'])) }}" class="btn-link">Ver detalle</a>
+                            <a href="{{ url('/pedidos/' . $order->id) }}" class="btn-link">Ver detalle</a>
                         </div>
                     </div>
                 @endforeach

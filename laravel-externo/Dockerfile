@@ -14,7 +14,8 @@ RUN apt-get update && apt-get install -y \
     npm \
     libzip-dev \
     dos2unix \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip opcache \
+    libpq-dev \
+    && docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd zip opcache \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Configurar OpCache para mejor rendimiento

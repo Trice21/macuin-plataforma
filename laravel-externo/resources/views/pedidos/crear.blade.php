@@ -155,19 +155,7 @@
 <body>
     <div class="page-bg"></div>
     @php
-        $id = request()->query('id');
-        $products = [
-            1 => ['name' => 'Filtro de aceite premium', 'sku' => 'SKU-2041', 'price' => '245.00'],
-            2 => ['name' => 'Pastillas de freno delanteras', 'sku' => 'SKU-3082', 'price' => '420.00'],
-            3 => ['name' => 'Bujía de encendido iridio', 'sku' => 'SKU-5103', 'price' => '185.00'],
-            4 => ['name' => 'Bomba de agua', 'sku' => 'SKU-7204', 'price' => '680.00'],
-            5 => ['name' => 'Correa de distribución', 'sku' => 'SKU-8305', 'price' => '320.00'],
-            6 => ['name' => 'Sensor de oxígeno', 'sku' => 'SKU-9406', 'price' => '395.00'],
-            7 => ['name' => 'Amortiguador trasero', 'sku' => 'SKU-1057', 'price' => '550.00'],
-            8 => ['name' => 'Bomba de combustible', 'sku' => 'SKU-2188', 'price' => '720.00'],
-        ];
-        $p = $products[$id] ?? ['name' => 'Autoparte Genérica', 'sku' => 'MAC-9821', 'price' => '0.00'];
-        $productImg = strtolower(explode(' ', trim($p['name']))[0]) . '.png';
+        // Carrito ya nos es proveído como $cartItems
     @endphp
     <header class="header">
         <div class="header-left">
@@ -188,7 +176,7 @@
             <div class="header-dropdown" id="user-dropdown" role="menu">
                 <a href="{{ url('/perfil') }}">Mi perfil</a>
                 <a href="{{ url('/perfil/configuracion') }}">Configuración</a>
-                <a href="{{ url('/login') }}">Cerrar sesión</a>
+                <a href="{{ url('/logout') }}">Cerrar sesión</a>
             </div>
         </div>
     </header>
@@ -241,26 +229,39 @@
                 <div class="card" style="padding: 1.5rem; position: sticky; top: 2rem;">
                     <h4 style="font-weight: 700; margin-bottom: 1.5rem; color: var(--primary);">Resumen de Pedido</h4>
                     
-                    <div class="product-preview">
-                        <img src="{{ asset('images/' . $productImg) }}" class="preview-img" onerror="this.src='https://via.placeholder.com/150'">
-                        <div class="preview-info">
-                            <p class="preview-name">{{ $p['name'] }}</p>
-                            <p class="preview-sku">SKU: {{ $p['sku'] }}</p>
+                    @foreach($cartItems as $item)
+                    <div class="product-preview" style="margin-bottom: 0.75rem;">
+                        @if($item->autopart->image_url)
+                            <img src="{{ $item->autopart->image_url }}" class="preview-img" alt="{{ $item->autopart->name }}">
+                        @else
+                            <img src="https://via.placeholder.com/150" class="preview-img">
+                        @endif
+                        <div class="preview-info" style="flex:1;">
+                            <p class="preview-name">{{ $item->autopart->name }} (x{{ $item->quantity }})</p>
+                            <p class="preview-sku">ID: {{ $item->autopart->id }}</p>
+                        </div>
+                        <div style="font-weight: 700; color: var(--primary);">
+                            ${{ number_format($item->autopart->price * $item->quantity, 2) }}
                         </div>
                     </div>
+                    @endforeach
                     
-                    <div class="order-summary">
+                    <div class="order-summary" style="margin-top: 1.5rem; border-top: 1px solid #e5e7eb; padding-top: 1rem;">
                         <div class="summary-item">
                             <span>Subtotal</span>
-                            <span>${{ $p['price'] }}</span>
+                            <span>${{ number_format($subtotal, 2) }}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>IVA (16%)</span>
+                            <span>${{ number_format($taxes, 2) }}</span>
                         </div>
                         <div class="summary-item">
                             <span>Envío</span>
                             <span style="color: var(--success); font-weight: 600;">GRATIS</span>
                         </div>
-                        <div class="summary-total">
-                            <span>Total</span>
-                            <span>${{ $p['price'] }}</span>
+                        <div class="summary-total" style="margin-top: 1rem; border-top: 1px solid #e5e7eb; padding-top: 1rem;">
+                            <span>Total Estimado</span>
+                            <span>${{ number_format($total, 2) }}</span>
                         </div>
                     </div>
                     

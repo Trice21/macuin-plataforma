@@ -127,14 +127,7 @@
             color: var(--primary);
             font-weight: 600;
         }
-        .card {
-            background: var(--card);
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            padding: 1.5rem;
-            border: 1px solid rgba(0, 0, 0, 0.05);
-        }
-        .badge {
+                .badge {
             padding: 0.25rem 0.625rem;
             border-radius: 9999px;
             font-size: 0.75rem;
@@ -160,6 +153,9 @@
                 </a>
                 <a href="/admin/autopartes" class="nav-item {% if active_page == 'autopartes' %}active{% endif %}">
                     <i class="fas fa-cogs"></i> Autopartes
+                </a>
+                <a href="/admin/pedidos" class="nav-item {% if active_page == 'pedidos' %}active{% endif %}">
+                    <i class="fas fa-shopping-cart"></i> Pedidos
                 </a>
                 <a href="/admin/inventario" class="nav-item {% if active_page == 'inventario' %}active{% endif %}">
                     <i class="fas fa-boxes-stacked"></i> Inventario
@@ -193,12 +189,23 @@
             </div>
             <div class="user-profile">
                 <div class="user-info">
-                    <span class="user-name">Administrador</span>
-                    <span class="user-role">Soporte Interno</span>
+                    <span class="user-name">{{ session.get('user_name', 'Usuario') }}</span>
+                    <span class="user-role">{{ session.get('user_role', 'Rol no definido')|upper }}</span>
                 </div>
-                <div class="avatar">AD</div>
+                <div class="avatar">{{ session.get('user_name', 'U')[:1]|upper }}</div>
             </div>
         </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
 
         {% block content %}{% endblock %}
     </main>

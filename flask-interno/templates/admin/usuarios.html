@@ -187,83 +187,79 @@
     <div class="card user-form-card" id="user-form-card">
         <h3 class="form-title">Agregar nuevo usuario</h3>
 
-        <form>
+        <form action="{{ url_for('usuarios_crear') }}" method="POST">
             <div class="user-form-grid">
                 <div class="form-group">
                     <label for="nombre">Nombre completo</label>
-                    <input type="text" id="nombre" class="form-control" placeholder="Ej. Ana López">
+                    <input type="text" name="name" id="nombre" class="form-control" placeholder="Ej. Ana López" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="usuario">Usuario</label>
-                    <input type="text" id="usuario" class="form-control" placeholder="Ej. alopez">
+                    <label for="email">Correo electrónico</label>
+                    <input type="email" name="email" id="email" class="form-control" placeholder="Ej. ana@macuin.com" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="correo">Correo electrónico</label>
-                    <input type="email" id="correo" class="form-control" placeholder="Ej. ana@macuin.com">
+                    <label for="password">Contraseña</label>
+                    <input type="password" name="password" id="password" class="form-control" placeholder="********" required>
                 </div>
 
                 <div class="form-group">
                     <label for="rol">Rol</label>
-                    <select id="rol" class="form-control">
-                        <option value="">Selecciona un rol</option>
-                        <option>Administrador</option>
-                        <option>Ventas</option>
-                        <option>Almacén</option>
-                        <option>Logística</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Contraseña temporal</label>
-                    <input type="password" id="password" class="form-control" placeholder="Ingresa una contraseña temporal">
-                </div>
-
-                <div class="form-group">
-                    <label for="estado">Estado</label>
-                    <select id="estado" class="form-control">
-                        <option>Activo</option>
-                        <option>Inactivo</option>
+                    <select name="role" id="rol" class="form-control" required>
+                        <option value="client">Cliente</option>
+                        <option value="employee">Empleado</option>
+                        <option value="admin">Administrador</option>
                     </select>
                 </div>
             </div>
 
             <div class="form-actions">
                 <button type="button" class="btn-cancelar" id="cancel-user-form">Cancelar</button>
-                <button type="submit" class="btn-guardar">Guardar usuario</button>
+                <button type="submit" class="btn-guardar">Guardar Usuario</button>
             </div>
         </form>
     </div>
 
-    <div class="card">
-
-        <div class="tabla-usuarios">
-            <table class="table mb-0">
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Usuario</th>
-                        <th>Rol</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Ana López</td>
-                        <td>alopez</td>
-                        <td>Administrador</td>
-                        <td><span class="badge-activo">Activo</span></td>
-                        <td>
-                            <button class="btn-editar">Editar</button>
-                            <button class="btn-eliminar">Desactivar</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
+    <div class="card tabla-usuarios">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th>Fecha Registro</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        <span class="badge-activo" style="background-color: 
+                            {% if user.role == 'admin' %}#e74c3c
+                            {% elif user.role == 'employee' %}#3498db
+                            {% else %}#2ecc71{% endif %}">
+                            {{ user.role|upper }}
+                        </span>
+                    </td>
+                    <td>{{ user.created_at[:10] }}</td>
+                    <td>
+                        <a href="{{ url_for('usuarios_editar', id=user.id) }}" class="btn-editar text-decoration-none">Editar</a>
+                        <a href="{{ url_for('usuarios_eliminar', id=user.id) }}" class="btn-eliminar text-decoration-none" onclick="return confirm('¿Eliminar usuario?')">Eliminar</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6">No hay usuarios registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
 </div>

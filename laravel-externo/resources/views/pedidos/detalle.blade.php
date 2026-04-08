@@ -395,17 +395,22 @@
 
     <main class="main">
         @php
-            $orderId = $id ?? '2847';
-            $orderRef = 'PED-' . $orderId;
-            $products = [
-                ['name' => 'Filtro de aceite premium',       'sku' => 'SKU-2041', 'price' => 245.00, 'qty' => 2],
-                ['name' => 'Pastillas de freno delanteras',  'sku' => 'SKU-3082', 'price' => 420.00, 'qty' => 1],
-                ['name' => 'Bujía de encendido iridio',      'sku' => 'SKU-5103', 'price' => 185.00, 'qty' => 3],
-                ['name' => 'Sensor de oxígeno',              'sku' => 'SKU-9406', 'price' => 395.00, 'qty' => 1],
-            ];
-            $subtotal = array_sum(array_map(fn($p) => $p['price'] * $p['qty'], $products));
-            $envio = 80.00;
-            $total = $subtotal + $envio;
+            $orderRef = 'PED-' . $order->id;
+            $statusClass = match(strtolower($order->status)) {
+                'pending', 'processing' => 'warning',
+                'shipped' => 'info',
+                'delivered' => 'success',
+                'cancelled' => 'error',
+                default => 'secondary'
+            };
+            $statusLabel = match(strtolower($order->status)) {
+                'pending' => 'Pendiente',
+                'processing' => 'En proceso',
+                'shipped' => 'Enviado',
+                'delivered' => 'Entregado',
+                'cancelled' => 'Cancelado',
+                default => $order->status
+            };
         @endphp
 
         {{-- Breadcrumb --}}
@@ -422,18 +427,14 @@
             <div class="page-header-left">
                 <h1>
                     {{ $orderRef }}
-                    <span class="badge badge-warning">En proceso</span>
+                    <span class="badge badge-{{ $statusClass }}">{{ $statusLabel }}</span>
                 </h1>
-                <p>Realizado el 25 de febrero de 2025 · 4 artículos</p>
+                <p>Realizado el {{ $order->created_at->format('d \d\e M \d\e Y') }} · {{ $order->items->count() }} artículos</p>
             </div>
             <div class="header-actions">
                 <button type="button" class="btn-outline">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 4v11"/></svg>
                     Descargar PDF
-                </button>
-                <button type="button" class="btn-outline" style="color:var(--error);border-color:rgba(229,57,53,0.25);">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    Cancelar pedido
                 </button>
             </div>
         </div>
@@ -441,56 +442,11 @@
         <div class="detail-grid">
             {{-- LEFT COLUMN --}}
             <div>
-                {{-- Progress tracker --}}
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">Seguimiento del pedido</span>
-                        <span style="font-size:0.8125rem;color:var(--text-secondary);">Actualizado: hoy 09:42</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="tracker">
-                            <div class="tracker-progress" style="width:37%;"></div>
-
-                            <div class="tracker-step">
-                                <div class="step-dot done">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                </div>
-                                <div class="step-label done">Confirmado</div>
-                                <div class="step-date">25 Feb</div>
-                            </div>
-
-                            <div class="tracker-step">
-                                <div class="step-dot active">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                                </div>
-                                <div class="step-label active">Preparando</div>
-                                <div class="step-date">26 Feb</div>
-                            </div>
-
-                            <div class="tracker-step">
-                                <div class="step-dot">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
-                                </div>
-                                <div class="step-label">Enviado</div>
-                                <div class="step-date">—</div>
-                            </div>
-
-                            <div class="tracker-step">
-                                <div class="step-dot">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                                </div>
-                                <div class="step-label">Entregado</div>
-                                <div class="step-date">—</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 {{-- Products --}}
                 <div class="card">
                     <div class="card-header">
                         <span class="card-title">Artículos del pedido</span>
-                        <span style="font-size:0.8125rem;color:var(--text-secondary);">{{ count($products) }} productos</span>
+                        <span style="font-size:0.8125rem;color:var(--text-secondary);">{{ $order->items->count() }} productos</span>
                     </div>
                     <div style="overflow-x:auto;">
                         <table class="products-table">
@@ -503,23 +459,26 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($products as $p)
-                                @php $productImg = strtolower(explode(' ', trim($p['name']))[0]) . '.png'; @endphp
+                                @foreach($order->items as $item)
                                 <tr>
                                     <td>
                                         <div class="prod-info">
                                             <div class="prod-thumb">
-                                                <img src="{{ asset('images/' . $productImg) }}" alt="{{ $p['name'] }}" onerror="this.style.display='none'">
+                                                @if($item->autopart && $item->autopart->image_url)
+                                                    <img src="{{ $item->autopart->image_url }}" alt="{{ $item->autopart->name }}">
+                                                @else
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;opacity:0.2;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                @endif
                                             </div>
                                             <div>
-                                                <div class="prod-name">{{ $p['name'] }}</div>
-                                                <div class="prod-sku">{{ $p['sku'] }}</div>
+                                                <div class="prod-name">{{ $item->autopart->name ?? 'Producto no disponible' }}</div>
+                                                <div class="prod-sku">ID: {{ $item->autopart_id }}</div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="prod-price" style="text-align:center;">${{ number_format($p['price'], 2) }}</td>
-                                    <td class="prod-qty">{{ $p['qty'] }}</td>
-                                    <td class="prod-subtotal">${{ number_format($p['price'] * $p['qty'], 2) }}</td>
+                                    <td class="prod-price" style="text-align:center;">${{ number_format($item->unit_price, 2) }}</td>
+                                    <td class="prod-qty">{{ $item->quantity }}</td>
+                                    <td class="prod-subtotal">${{ number_format($item->unit_price * $item->quantity, 2) }}</td>
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -530,19 +489,11 @@
                     <div class="totals-section">
                         <div class="totals-row">
                             <span>Subtotal</span>
-                            <span>${{ number_format($subtotal, 2) }}</span>
-                        </div>
-                        <div class="totals-row">
-                            <span>Envío</span>
-                            <span>${{ number_format($envio, 2) }}</span>
-                        </div>
-                        <div class="totals-row">
-                            <span>Descuento</span>
-                            <span style="color:var(--success);">— $0.00</span>
+                            <span>${{ number_format($order->total_price, 2) }}</span>
                         </div>
                         <div class="totals-row grand">
                             <span>Total</span>
-                            <span class="amount">${{ number_format($total, 2) }}</span>
+                            <span class="amount">${{ number_format($order->total_price, 2) }}</span>
                         </div>
                     </div>
                 </div>
@@ -562,19 +513,11 @@
                         </div>
                         <div class="info-row">
                             <span class="info-label">Fecha</span>
-                            <span class="info-value">25 Feb 2025</span>
+                            <span class="info-value">{{ $order->created_at->format('d M Y') }}</span>
                         </div>
                         <div class="info-row">
                             <span class="info-label">Estatus</span>
-                            <span class="info-value"><span class="badge badge-warning">En proceso</span></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Método de pago</span>
-                            <span class="info-value">Transferencia</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Entrega est.</span>
-                            <span class="info-value">01 Mar 2025</span>
+                            <span class="info-value"><span class="badge badge-{{ $statusClass }}">{{ $statusLabel }}</span></span>
                         </div>
                     </div>
                 </div>
@@ -585,53 +528,10 @@
                         <span class="card-title">Dirección de envío</span>
                     </div>
                     <div class="card-body">
-                        <div style="font-weight:600;margin-bottom:0.35rem;">{{ optional(auth()->user())->name ?? 'Carlos Méndez' }}</div>
+                        <div style="font-weight:600;margin-bottom:0.35rem;">{{ auth()->user()->name }}</div>
                         <div style="font-size:0.9375rem;color:var(--text-secondary);line-height:1.6;">
-                            Av. Constituyentes 456, Col. Centro<br>
-                            Querétaro, Qro. 76000<br>
-                            México<br>
-                            <span style="display:inline-flex;align-items:center;gap:0.25rem;margin-top:0.35rem;">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:13px;height:13px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                                +52 442 123 4567
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Activity timeline --}}
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">Actividad</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="timeline">
-                            <div class="tl-item">
-                                <div class="tl-dot">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                                </div>
-                                <div class="tl-content">
-                                    <div class="tl-event">Pedido en preparación</div>
-                                    <div class="tl-time">26 Feb 2025 · 09:42</div>
-                                </div>
-                            </div>
-                            <div class="tl-item">
-                                <div class="tl-dot success">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                </div>
-                                <div class="tl-content">
-                                    <div class="tl-event">Pago confirmado</div>
-                                    <div class="tl-time">25 Feb 2025 · 15:30</div>
-                                </div>
-                            </div>
-                            <div class="tl-item">
-                                <div class="tl-dot success">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                                </div>
-                                <div class="tl-content">
-                                    <div class="tl-event">Pedido creado</div>
-                                    <div class="tl-time">25 Feb 2025 · 14:17</div>
-                                </div>
-                            </div>
+                            {{ auth()->user()->email }}<br>
+                            Cliente MACUIN
                         </div>
                     </div>
                 </div>

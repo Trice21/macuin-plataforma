@@ -62,18 +62,7 @@
 </head>
 <body>
     @php
-        $products = [
-            1 => ['name' => 'Filtro de aceite premium', 'sku' => 'SKU-2041', 'price' => '245.00', 'stock' => 15],
-            2 => ['name' => 'Pastillas de freno delanteras', 'sku' => 'SKU-3082', 'price' => '420.00', 'stock' => 8],
-            3 => ['name' => 'Bujía de encendido iridio', 'sku' => 'SKU-5103', 'price' => '185.00', 'stock' => 5],
-            4 => ['name' => 'Bomba de agua', 'sku' => 'SKU-7204', 'price' => '680.00', 'stock' => 12],
-            5 => ['name' => 'Correa de distribución', 'sku' => 'SKU-8305', 'price' => '320.00', 'stock' => 0],
-            6 => ['name' => 'Sensor de oxígeno', 'sku' => 'SKU-9406', 'price' => '395.00', 'stock' => 20],
-            7 => ['name' => 'Amortiguador trasero', 'sku' => 'SKU-1057', 'price' => '550.00', 'stock' => 4],
-            8 => ['name' => 'Bomba de combustible', 'sku' => 'SKU-2188', 'price' => '720.00', 'stock' => 10],
-        ];
-        $p = $products[$id] ?? $products[1];
-        $productImg = strtolower(explode(' ', trim($p['name']))[0]) . '.png';
+        $productImg = strtolower(explode(' ', trim($autopart->name))[0]) . '.png';
     @endphp
     <header class="header">
         <a href="/" class="logo">MACUIN</a>
@@ -89,25 +78,27 @@
         
         <div class="product-grid">
             <div class="product-image-container">
-                <img src="{{ asset('images/' . $productImg) }}" alt="{{ $p['name'] }}" class="product-image" onerror="this.src='https://via.placeholder.com/400x300?text=Autoparte'">
+                @if($autopart->image_url)
+                    <img src="{{ $autopart->image_url }}" alt="{{ $autopart->name }}" class="product-image">
+                @else
+                    <img src="{{ asset('images/' . $productImg) }}" alt="{{ $autopart->name }}" class="product-image" onerror="this.src='https://via.placeholder.com/400x300?text=Autoparte'">
+                @endif
             </div>
             
             <div>
-                @if($p['stock'] > 0)
-                    <span class="badge badge-success">Disponible ({{ $p['stock'] }} en stock)</span>
+                @if($autopart->stock > 0)
+                    <span class="badge badge-success">Disponible ({{ $autopart->stock }} en stock)</span>
                 @else
                     <span class="badge" style="background: #FEE2E2; color: #991B1B;">Sin Stock</span>
                 @endif
-                <h1 class="product-title">{{ $p['name'] }}</h1>
-                <p class="product-sku">SKU: {{ $p['sku'] }} | Categoría: Motor</p>
+                <h1 class="product-title">{{ $autopart->name }}</h1>
+                <p class="product-sku">ID: {{ $autopart->id }} | Categoría: {{ $autopart->category ?? 'General' }}</p>
                 
-                <div class="product-price">${{ $p['price'] }} MXN</div>
+                <div class="product-price">${{ number_format($autopart->price, 2) }} MXN</div>
                 
                 <h3 class="section-title">Descripción</h3>
                 <p class="product-desc">
-                    Esta autoparte ha sido fabricada bajo los más altos estándares de calidad OEM. 
-                    Garantiza un ajuste perfecto y un rendimiento superior para su vehículo, 
-                    asegurando durabilidad incluso en las condiciones más exigentes.
+                    {{ $autopart->description ?? 'Esta autoparte ha sido fabricada bajo los más altos estándares de calidad OEM. Garantiza un ajuste perfecto y un rendimiento superior para su vehículo, asegurando durabilidad incluso en las condiciones más exigentes.' }}
                 </p>
                 
                 <h3 class="section-title">Compatibilidad</h3>
@@ -117,7 +108,7 @@
                     • Instalación rápida plug-and-play.
                 </p>
                 
-                <a href="/pedidos/crear?id={{ $id }}" class="btn-order">
+                <a href="/pedidos/crear?id={{ $autopart->id }}" class="btn-order">
                     <i class="fas fa-shopping-cart"></i> Realizar Pedido Ahora
                 </a>
             </div>

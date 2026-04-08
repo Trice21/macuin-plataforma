@@ -3,220 +3,958 @@
 {% block title %}Reportes de Gestión{% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Mock Export Functionality
-        const exportBtns = document.querySelectorAll('.export-btn');
-        exportBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                alert('Generando reporte para exportación...');
-                setTimeout(() => {
-                    window.print();
-                }, 500);
+document.addEventListener('DOMContentLoaded', function() {
+    // Configuración base para flatpickr
+    const flatpickrConfig = {
+        locale: "es", // Idioma español
+        dateFormat: "Y-m-d",
+        maxDate: "today",
+        disableMobile: true,
+        allowInput: false, // Cambiado a false para evitar problemas de enfoque al hacer clic en días
+        static: false,
+        monthSelectorType: "static",
+        onReady: function(selectedDates, dateStr, instance) {
+            // Asegurar que el calendario use español explícitamente si es necesario
+            if (instance.l10n && instance.l10n.months) {
+                instance.l10n.months.longhand = [
+                    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+                ];
+            }
+            
+            // Permitir que el icono también abra el calendario
+            const container = instance.element.closest('.date-picker-container');
+            if (container) {
+                const icon = container.querySelector('i');
+                if (icon) {
+                    icon.style.cursor = 'pointer';
+                    icon.addEventListener('click', () => instance.open());
+                }
+            }
+        }
+    };
+
+    // Inicializar selectores de fecha en pares (Inicio - Fin) para validación
+    const forms = document.querySelectorAll('.report-form');
+    forms.forEach(form => {
+        const startInput = form.querySelector('input[name="start_date"]');
+        const endInput = form.querySelector('input[name="end_date"]');
+
+        if (startInput && endInput) {
+            const startPicker = flatpickr(startInput, {
+                ...flatpickrConfig,
+                onChange: function(selectedDates, dateStr) {
+                    endPicker.set('minDate', dateStr);
+                }
             });
+
+            const endPicker = flatpickr(endInput, {
+                ...flatpickrConfig,
+                onChange: function(selectedDates, dateStr) {
+                    startPicker.set('maxDate', dateStr);
+                }
+            });
+        } else {
+            // Inicializar cualquier otro date picker suelto
+            form.querySelectorAll('.date-picker:not(.flatpickr-input), .date-picker-inline:not(.flatpickr-input)').forEach(input => {
+                flatpickr(input, flatpickrConfig);
+            });
+        }
+    });
+
+    // Manejar selección de chips de estado
+    const statusChips = document.querySelectorAll('.status-chip');
+    const statusHidden = document.getElementById('status-hidden');
+    
+    statusChips.forEach(chip => {
+        chip.addEventListener('click', function() {
+            this.classList.toggle('active');
+            
+            // Recolectar valores activos
+            const activeValues = Array.from(document.querySelectorAll('.status-chip.active'))
+                .map(c => c.dataset.value);
+            
+            // Actualizar input hidden (como lista para el backend si es necesario, 
+            // o múltiples parámetros en el envío)
+            statusHidden.value = activeValues.join(',');
         });
     });
+
+    // Hacer clearFilters global para los atributos onclick
+     window.clearFilters = function(formId) {
+         const form = document.getElementById(formId);
+         if (!form) return;
+         
+         form.reset();
+         
+         // Limpiar date pickers
+         form.querySelectorAll('.date-picker').forEach(picker => {
+             if (picker._flatpickr) picker._flatpickr.clear();
+         });
+
+         // Limpiar chips de estado si es el formulario de pedidos
+         if (formId === 'orders-form') {
+             document.querySelectorAll('.status-chip').forEach(c => c.classList.remove('active'));
+             const pendingChip = document.querySelector('.status-chip[data-value="pending"]');
+             if (pendingChip) {
+                 pendingChip.classList.add('active');
+                 const statusHidden = document.getElementById('status-hidden');
+                 if (statusHidden) statusHidden.value = "pending";
+             }
+         }
+     };
+
+    // Manejar envío de formularios de reportes
+    const reportForms = document.querySelectorAll('.report-form');
+    reportForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const params = new URLSearchParams();
+            
+            // Manejo especial para estados (múltiples valores)
+            if (this.id === 'orders-form') {
+                const activeStates = Array.from(document.querySelectorAll('.status-chip.active'))
+                    .map(c => c.dataset.value);
+                activeStates.forEach(state => params.append('status', state));
+                
+                // Agregar otros campos excepto 'status' (que ya agregamos)
+                for (let [key, value] of formData.entries()) {
+                    if (value && key !== 'status') params.append(key, value);
+                }
+            } else {
+                // Comportamiento normal para otros formularios
+                for (let [key, value] of formData.entries()) {
+                    if (value) params.append(key, value);
+                }
+            }
+            
+            // Construir URL de descarga
+            const reportType = this.dataset.reportType;
+            const formatInput = document.getElementById(`format-${reportType.replace('/', '')}`);
+            const format = formatInput ? formatInput.value : 'xlsx';
+            const url = `{{ url_for('descargar_reporte', report_type='') }}${reportType}?format=${format}&${params.toString()}`;
+            
+            // Mostrar loading
+            const btn = this.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generando...';
+            btn.disabled = true;
+            
+            // Descargar reporte
+            window.open(url, '_blank');
+            
+            // Restaurar botón después de 2 segundos
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 2000);
+        });
+    });
+});
 </script>
 {% endblock %}
+
 {% block header_title %}Reportes y Análisis{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
-    .reports-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-    .chart-container {
-        height: 300px;
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-around;
-        padding: 2rem 1rem 1rem;
-        border-bottom: 2px solid var(--accent);
-        gap: 1rem;
-    }
-    .bar {
-        width: 100%;
-        background: var(--secondary);
-        border-radius: 4px 4px 0 0;
-        transition: height 0.5s ease;
-        position: relative;
-    }
-    .bar:hover { background: var(--primary); }
-    .bar-label {
-        position: absolute;
-        bottom: -25px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-        white-space: nowrap;
-    }
-    .bar-value {
-        position: absolute;
-        top: -25px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-    .report-card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-    }
-    .export-btn {
-        padding: 0.5rem 1rem;
-        border: 1px solid var(--accent);
-        border-radius: 6px;
-        background: white;
-        font-size: 0.8125rem;
-        font-weight: 500;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
+.report-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+.report-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+    padding: 1.5rem;
+}
+.report-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.report-description {
+    font-size: 0.875rem;
+    opacity: 0.9;
+    margin: 0.5rem 0 0 0;
+}
+.report-body {
+    padding: 1.5rem;
+}
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.filter-group label {
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.filter-group input[type="text"],
+.filter-group input[type="number"],
+.filter-group select {
+    padding: 0.875rem 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    width: 100%;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+    background-color: white;
+}
+
+/* Padding especial para campos con icono de calendario */
+.filter-group .date-picker,
+.filter-group .date-picker-inline {
+    padding-right: 2.75rem;
+    cursor: pointer;
+}
+
+.filter-group input[type="text"]:focus,
+.filter-group input[type="number"]:focus,
+.filter-group select:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    transform: translateY(-1px);
+}
+
+.filter-group select[multiple] {
+    height: auto;
+    min-height: 100px;
+    padding: 0.875rem;
+}
+
+/* Contenedor para date picker */
+.date-picker-container {
+    position: relative;
+    width: 100%;
+}
+
+.date-picker-container i {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    pointer-events: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+    z-index: 2; /* Asegurar que esté por encima del input */
+}
+
+.date-picker-container:focus-within i {
+    color: var(--primary);
+}
+
+.date-picker-container input {
+    cursor: pointer;
+    background-color: white !important;
+}
+
+/* Estilos para el datepicker - Solución definitiva y estética */
+.flatpickr-calendar {
+    display: none !important;
+    position: absolute !important;
+    background: #fff !important;
+    border: none !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.15) !important;
+    width: 320px !important;
+    padding: 12px !important;
+    z-index: 99999 !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+.flatpickr-calendar.open {
+    display: block !important;
+}
+
+/* Encabezado */
+.flatpickr-months {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    background: transparent !important;
+    padding: 5px 0 15px 0 !important;
+    position: relative !important;
+}
+
+.flatpickr-month {
+    flex: 1 !important;
+    height: auto !important;
+    color: var(--text-primary) !important;
+}
+
+.flatpickr-current-month {
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+    position: static !important;
+    width: auto !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.flatpickr-current-month .cur-month {
+    font-weight: 700 !important;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-current-month input.cur-year {
+    background: transparent !important;
+    color: var(--text-primary) !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 2px 5px !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+}
+
+/* Flechas */
+.flatpickr-prev-month, .flatpickr-next-month {
+    position: relative !important;
+    top: 0 !important;
+    padding: 8px !important;
+    border-radius: 50% !important;
+    background: #f1f5f9 !important;
+    color: var(--text-primary) !important;
+    fill: var(--text-primary) !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.flatpickr-prev-month:hover, .flatpickr-next-month:hover {
+    background: #e2e8f0 !important;
+    transform: scale(1.1) !important;
+}
+
+.flatpickr-prev-month svg, .flatpickr-next-month svg {
+    width: 12px !important;
+    height: 12px !important;
+}
+
+/* Semanario */
+.flatpickr-weekdays {
+    display: none !important; /* Eliminar los nombres de los días que se ven mal */
+}
+
+/* Días */
+.dayContainer {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    gap: 4px !important;
+    padding: 10px 0 0 0 !important;
+    width: 100% !important;
+}
+
+.flatpickr-day {
+    width: 100% !important;
+    height: 40px !important;
+    line-height: 40px !important;
+    margin: 0 !important;
+    border-radius: 10px !important;
+    font-weight: 500 !important;
+    font-size: 0.9rem !important;
+    transition: all 0.2s ease !important;
+    border: none !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    outline: none !important;
+    box-shadow: none !important; /* Quita sombras que puedan parecer bordes */
+}
+
+.flatpickr-day::after, .flatpickr-day::before {
+    display: none !important; /* Elimina cualquier pseudo-elemento que genere bordes extraños */
+}
+
+.flatpickr-day.selected {
+    background: var(--primary) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(31, 58, 95, 0.3) !important;
+    border: none !important;
+}
+
+.flatpickr-day.today {
+    border: 2px solid var(--primary) !important;
+    color: var(--primary) !important;
+    background: transparent !important;
+}
+
+.flatpickr-day.today.selected {
+    background: var(--primary) !important;
+    color: white !important;
+}
+
+.flatpickr-day:hover {
+    background: #f1f5f9 !important;
+}
+
+.flatpickr-day.prevMonthDay, .flatpickr-day.nextMonthDay {
+    color: #cbd5e1 !important;
+    opacity: 0.5 !important;
+}
+
+/* Eliminar la barra azul superior y limpiar estilos previos */
+.flatpickr-months .flatpickr-month {
+    background: transparent !important;
+}
+
+
+/* Estilos para los chips de estado */
+.status-chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    background: white;
+}
+
+.status-chip {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.status-chip:hover {
+    border-color: var(--primary);
+    background: #f1f5f9;
+}
+
+.status-chip.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.status-chip[data-value="pending"].active { background-color: #f59e0b; border-color: #f59e0b; }
+.status-chip[data-value="processing"].active { background-color: #3b82f6; border-color: #3b82f6; }
+.status-chip[data-value="shipped"].active { background-color: #8b5cf6; border-color: #8b5cf6; }
+.status-chip[data-value="delivered"].active { background-color: #10b981; border-color: #10b981; }
+.status-chip[data-value="cancelled"].active { background-color: #ef4444; border-color: #ef4444; }
+
+/* Ocultar elementos que no se necesitan */
+.calendar-inline {
+    display: none;
+}
+
+.date-picker-inline {
+    background-color: white !important;
+    border: 2px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 0.875rem 2.5rem 0.875rem 1rem !important; /* Aumentado padding derecho */
+    font-size: 0.95rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+}
+
+.date-picker-inline:focus {
+    border-color: var(--primary) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange,
+.flatpickr-day.selected.inRange,
+.flatpickr-day.startRange.inRange,
+.flatpickr-day.endRange.inRange,
+.flatpickr-day.selected:focus,
+.flatpickr-day.startRange:focus,
+.flatpickr-day.endRange:focus,
+.flatpickr-day.selected:hover,
+.flatpickr-day.startRange:hover,
+.flatpickr-day.endRange:hover,
+.flatpickr-day.selected.prevMonthDay,
+.flatpickr-day.startRange.prevMonthDay,
+.flatpickr-day.endRange.prevMonthDay {
+    background-color: var(--primary);
+    color: white;
+    border-radius: 6px;
+}
+
+.format-selector {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+.format-btn {
+    padding: 0.625rem 1.125rem;
+    border: 1px solid #e2e8f0;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.format-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+.btn-generate {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+    border: none;
+    padding: 0.875rem 2rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+    font-size: 0.9rem;
+}
+.btn-generate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+.btn-clear {
+    background: #f8fafc;
+    color: var(--text-secondary);
+    border: 1px solid #e2e8f0;
+    padding: 0.875rem 2rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 0.9rem;
+}
+.btn-clear:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="reports-grid">
-    <div class="card">
-        <div class="report-card-header">
-            <h3 style="font-size: 1rem; font-weight: 600; color: var(--primary);">Reporte de Ventas (Ventas Semanales)</h3>
-            <button class="export-btn"><i class="fas fa-download"></i> Exportar Ventas</button>
-        </div>
-        <div class="chart-container">
-            <div class="bar" style="height: 40%;">
-                <span class="bar-value">$1.2k</span>
-                <span class="bar-label">Lun</span>
-            </div>
-            <div class="bar" style="height: 65%;">
-                <span class="bar-value">$2.4k</span>
-                <span class="bar-label">Mar</span>
-            </div>
-            <div class="bar" style="height: 50%;">
-                <span class="bar-value">$1.8k</span>
-                <span class="bar-label">Mie</span>
-            </div>
-            <div class="bar" style="height: 85%;">
-                <span class="bar-value">$3.2k</span>
-                <span class="bar-label">Jue</span>
-            </div>
-            <div class="bar" style="height: 75%;">
-                <span class="bar-value">$2.8k</span>
-                <span class="bar-label">Vie</span>
-            </div>
-            <div class="bar" style="height: 95%;">
-                <span class="bar-value">$4.1k</span>
-                <span class="bar-label">Sab</span>
-            </div>
-            <div class="bar" style="height: 30%;">
-                <span class="bar-value">$0.9k</span>
-                <span class="bar-label">Dom</span>
-            </div>
-        </div>
-    </div>
+<div class="container-fluid p-4">
+    <!-- Sección de Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filtros de Reportes</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Reporte 1: Ventas por Autoparte -->
+                    <div class="report-section mb-4">
+                        <div class="report-header">
+                            <h5 class="report-title">
+                                <i class="fas fa-chart-line"></i>
+                                Ventas por Autoparte
+                            </h5>
+                            <p class="report-description">Análisis detallado de ventas por producto con múltiples filtros</p>
+                        </div>
+                        <div class="report-body">
+                            <form class="report-form" data-report-type="/sales-by-autopart" id="sales-form">
+                                <div class="filter-grid">
+                                    <div class="filter-group">
+                                        <label>Fecha Inicio</label>
+                                        <div class="date-picker-container">
+                                            <input type="text" name="start_date" class="date-picker" placeholder="YYYY-MM-DD">
+                                            <i class="fas fa-calendar-alt"></i>
+                                        </div>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Fecha Fin</label>
+                                        <div class="date-picker-container">
+                                            <input type="text" name="end_date" class="date-picker" placeholder="YYYY-MM-DD">
+                                            <i class="fas fa-calendar-alt"></i>
+                                        </div>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Categoría</label>
+                                        <select name="category">
+                                            <option value="">Todas las categorías</option>
+                                            <option value="Motor">Motor</option>
+                                            <option value="Suspensión">Suspensión</option>
+                                            <option value="Encendido">Encendido</option>
+                                            <option value="Frenos">Frenos</option>
+                                            <option value="Transmisión">Transmisión</option>
+                                        </select>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Ventas Mínimas</label>
+                                        <input type="number" name="min_sales" placeholder="0" min="0">
+                                        <div class="form-text text-muted">Mínimo 0.</div>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Ordenar por</label>
+                                        <select name="sort_by">
+                                            <option value="quantity">Cantidad Vendida</option>
+                                            <option value="revenue">Ingresos Totales</option>
+                                            <option value="name">Nombre</option>
+                                        </select>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Orden</label>
+                                        <select name="order">
+                                            <option value="desc">Descendente</option>
+                                            <option value="asc">Ascendente</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="format-selector">
+                                    <button type="button" class="format-btn active" data-format="xlsx" data-target="sales-by-autopart">
+                                        <i class="fas fa-file-excel me-2"></i>Excel
+                                    </button>
+                                    <button type="button" class="format-btn" data-format="pdf" data-target="sales-by-autopart">
+                                        <i class="fas fa-file-pdf me-2"></i>PDF
+                                    </button>
+                                    <button type="button" class="format-btn" data-format="docx" data-target="sales-by-autopart">
+                                        <i class="fas fa-file-word me-2"></i>Word
+                                    </button>
+                                </div>
+                                <input type="hidden" id="format-sales-by-autopart" name="format" value="xlsx">
+                                
+                                <div class="action-buttons">
+                                    <button type="button" class="btn-clear" onclick="clearFilters('sales-form')">
+                                        <i class="fas fa-times me-2"></i>Limpiar Filtros
+                                    </button>
+                                    <button type="submit" class="btn-generate">
+                                        <i class="fas fa-download me-2"></i>Generar Reporte
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
 
-    <div class="card">
-        <div class="report-card-header">
-            <h3 style="font-size: 1rem; font-weight: 600; color: var(--primary);">Reporte de Pedidos Clientes (Estatus)</h3>
-            <button class="export-btn"><i class="fas fa-download"></i> Exportar Pedidos</button>
-        </div>
-        <div style="padding: 1rem 0;">
-            <div style="margin-bottom: 1.5rem;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                    <span style="font-size: 0.875rem; color: var(--text-secondary);">Completados</span>
-                    <span style="font-size: 0.875rem; font-weight: 600;">75%</span>
-                </div>
-                <div style="width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
-                    <div style="width: 75%; height: 100%; background: var(--success);"></div>
-                </div>
-            </div>
-            <div style="margin-bottom: 1.5rem;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                    <span style="font-size: 0.875rem; color: var(--text-secondary);">En Proceso</span>
-                    <span style="font-size: 0.875rem; font-weight: 600;">15%</span>
-                </div>
-                <div style="width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
-                    <div style="width: 15%; height: 100%; background: var(--warning);"></div>
-                </div>
-            </div>
-            <div style="margin-bottom: 1.5rem;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                    <span style="font-size: 0.875rem; color: var(--text-secondary);">Pendientes</span>
-                    <span style="font-size: 0.875rem; font-weight: 600;">10%</span>
-                </div>
-                <div style="width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
-                    <div style="width: 10%; height: 100%; background: var(--danger);"></div>
+                    <!-- Reporte 2: Mejores Clientes -->
+                    <div class="report-section mb-4">
+                        <div class="report-header">
+                            <h5 class="report-title">
+                                <i class="fas fa-users"></i>
+                                Mejores Clientes
+                            </h5>
+                            <p class="report-description">Análisis de clientes con filtros avanzados</p>
+                        </div>
+                        <div class="report-body">
+                            <form class="report-form" data-report-type="/top-users" id="users-form">
+                                <div class="filter-grid">
+                                    <div class="filter-group">
+                                        <label>Fecha Inicio</label>
+                                        <div class="date-picker-container">
+                                            <input type="text" name="start_date" class="date-picker" placeholder="YYYY-MM-DD">
+                                            <i class="fas fa-calendar-alt"></i>
+                                        </div>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Fecha Fin</label>
+                                        <div class="date-picker-container">
+                                            <input type="text" name="end_date" class="date-picker" placeholder="YYYY-MM-DD">
+                                            <i class="fas fa-calendar-alt"></i>
+                                        </div>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Pedidos Mínimos</label>
+                                        <input type="number" name="min_orders" placeholder="1" min="1">
+                                        <div class="form-text text-muted">Mínimo 1.</div>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Gasto Mínimo</label>
+                                        <input type="number" name="min_spent" placeholder="0" min="0" step="0.01">
+                                        <div class="form-text text-muted">Mínimo 0.</div>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Rol de Usuario</label>
+                                        <select name="user_role">
+                                            <option value="">Todos los roles</option>
+                                            <option value="CLIENT">Clientes</option>
+                                            <option value="ADMIN">Administradores</option>
+                                        </select>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Límite de Resultados</label>
+                                        <select name="limit">
+                                            <option value="10">Top 10</option>
+                                            <option value="25">Top 25</option>
+                                            <option value="50">Top 50</option>
+                                            <option value="100">Top 100</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="format-selector">
+                                    <button type="button" class="format-btn active" data-format="xlsx" data-target="top-users">
+                                        <i class="fas fa-file-excel me-2"></i>Excel
+                                    </button>
+                                    <button type="button" class="format-btn" data-format="pdf" data-target="top-users">
+                                        <i class="fas fa-file-pdf me-2"></i>PDF
+                                    </button>
+                                    <button type="button" class="format-btn" data-format="docx" data-target="top-users">
+                                        <i class="fas fa-file-word me-2"></i>Word
+                                    </button>
+                                </div>
+                                <input type="hidden" id="format-top-users" name="format" value="xlsx">
+                                
+                                <div class="action-buttons">
+                                    <button type="button" class="btn-clear" onclick="clearFilters('users-form')">
+                                        <i class="fas fa-times me-2"></i>Limpiar Filtros
+                                    </button>
+                                    <button type="submit" class="btn-generate">
+                                        <i class="fas fa-download me-2"></i>Generar Reporte
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Reporte 3: Estado de Pedidos -->
+                    <div class="report-section mb-4">
+                        <div class="report-header">
+                            <h5 class="report-title">
+                                <i class="fas fa-tasks"></i>
+                                Estado de Pedidos
+                            </h5>
+                            <p class="report-description">Reporte de pedidos con filtros completos</p>
+                        </div>
+                        <div class="report-body">
+                            <form class="report-form" data-report-type="/orders-status" id="orders-form">
+                                <div class="filter-grid">
+                                    <div class="filter-group">
+                                        <label>Fecha Inicio</label>
+                                        <div class="date-picker-container">
+                                            <input type="text" name="start_date" class="date-picker" placeholder="YYYY-MM-DD">
+                                            <i class="fas fa-calendar-alt"></i>
+                                        </div>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Fecha Fin</label>
+                                        <div class="date-picker-container">
+                                            <input type="text" name="end_date" class="date-picker" placeholder="YYYY-MM-DD">
+                                            <i class="fas fa-calendar-alt"></i>
+                                        </div>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Estados</label>
+                                        <div class="status-chips-container" id="status-chips">
+                                            <div class="status-chip active" data-value="pending">Pendiente</div>
+                                            <div class="status-chip" data-value="processing">Procesando</div>
+                                            <div class="status-chip" data-value="shipped">Enviado</div>
+                                            <div class="status-chip" data-value="delivered">Entregado</div>
+                                            <div class="status-chip" data-value="cancelled">Cancelado</div>
+                                        </div>
+                                        <input type="hidden" name="status" id="status-hidden" value="pending">
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Monto Mínimo</label>
+                                        <input type="number" name="min_amount" placeholder="0" min="0" step="0.01">
+                                        <div class="form-text text-muted">Mínimo 0.</div>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Monto Máximo</label>
+                                        <input type="number" name="max_amount" placeholder="999999" min="0" step="0.01">
+                                        <div class="form-text text-muted">Mínimo 0.</div>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Agrupar por</label>
+                                        <select name="group_by">
+                                            <option value="status">Estado</option>
+                                            <option value="month">Mes</option>
+                                            <option value="week">Semana</option>
+                                            <option value="day">Día</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="format-selector">
+                                    <button type="button" class="format-btn active" data-format="xlsx" data-target="orders-status">
+                                        <i class="fas fa-file-excel me-2"></i>Excel
+                                    </button>
+                                    <button type="button" class="format-btn" data-format="pdf" data-target="orders-status">
+                                        <i class="fas fa-file-pdf me-2"></i>PDF
+                                    </button>
+                                    <button type="button" class="format-btn" data-format="docx" data-target="orders-status">
+                                        <i class="fas fa-file-word me-2"></i>Word
+                                    </button>
+                                </div>
+                                <input type="hidden" id="format-orders-status" name="format" value="xlsx">
+                                
+                                <div class="action-buttons">
+                                    <button type="button" class="btn-clear" onclick="clearFilters('orders-form')">
+                                        <i class="fas fa-times me-2"></i>Limpiar Filtros
+                                    </button>
+                                    <button type="submit" class="btn-generate">
+                                        <i class="fas fa-download me-2"></i>Generar Reporte
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Reporte 4: Inventario -->
+                    <div class="report-section mb-4">
+                        <div class="report-header">
+                            <h5 class="report-title">
+                                <i class="fas fa-warehouse"></i>
+                                Reporte de Inventario
+                            </h5>
+                            <p class="report-description">Análisis completo del inventario con filtros avanzados</p>
+                        </div>
+                        <div class="report-body">
+                            <form class="report-form" data-report-type="/inventory" id="inventory-form">
+                                <div class="filter-grid">
+                                    <div class="filter-group">
+                                        <label>Categoría</label>
+                                        <select name="category">
+                                            <option value="">Todas las categorías</option>
+                                            <option value="Motor">Motor</option>
+                                            <option value="Suspensión">Suspensión</option>
+                                            <option value="Encendido">Encendido</option>
+                                            <option value="Frenos">Frenos</option>
+                                            <option value="Transmisión">Transmisión</option>
+                                        </select>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Nivel de Stock</label>
+                                        <select name="stock_level">
+                                            <option value="">Todos</option>
+                                            <option value="low">Bajo (&lt; 10)</option>
+                                            <option value="critical">Crítico (&lt; 5)</option>
+                                            <option value="out">Agotado (= 0)</option>
+                                            <option value="normal">Normal (&gt;= 10)</option>
+                                        </select>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Precio Mínimo</label>
+                                        <input type="number" name="min_price" placeholder="0" min="0" step="0.01">
+                                        <div class="form-text text-muted">Mínimo 0.</div>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Precio Máximo</label>
+                                        <input type="number" name="max_price" placeholder="999999" min="0" step="0.01">
+                                        <div class="form-text text-muted">Mínimo 0.</div>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Ordenar por</label>
+                                        <select name="sort_by">
+                                            <option value="name">Nombre</option>
+                                            <option value="stock">Stock</option>
+                                            <option value="price">Precio</option>
+                                            <option value="category">Categoría</option>
+                                            <option value="created_at">Fecha Creación</option>
+                                        </select>
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Incluir sin Stock</label>
+                                        <select name="include_out_of_stock">
+                                            <option value="true">Sí</option>
+                                            <option value="false">No</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="format-selector">
+                                    <button type="button" class="format-btn active" data-format="xlsx" data-target="inventory">
+                                        <i class="fas fa-file-excel me-2"></i>Excel
+                                    </button>
+                                    <button type="button" class="format-btn" data-format="pdf" data-target="inventory">
+                                        <i class="fas fa-file-pdf me-2"></i>PDF
+                                    </button>
+                                    <button type="button" class="format-btn" data-format="docx" data-target="inventory">
+                                        <i class="fas fa-file-word me-2"></i>Word
+                                    </button>
+                                </div>
+                                <input type="hidden" id="format-inventory" name="format" value="xlsx">
+                                
+                                <div class="action-buttons">
+                                    <button type="button" class="btn-clear" onclick="clearFilters('inventory-form')">
+                                        <i class="fas fa-times me-2"></i>Limpiar Filtros
+                                    </button>
+                                    <button type="submit" class="btn-generate">
+                                        <i class="fas fa-download me-2"></i>Generar Reporte
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card mb-4">
-    <div class="report-card-header">
-        <h3 style="font-size: 1.125rem; font-weight: 600; color: var(--primary);">Análisis de Ventas por Categoría</h3>
-        <button class="export-btn"><i class="fas fa-file-csv"></i> CSV</button>
-    </div>
-    <div class="table-responsive">
-        <table class="table table-hover mb-0">
-            <thead>
-                <tr>
-                    <th>Categoría</th>
-                    <th>Unidades Vendidas</th>
-                    <th>Ingresos</th>
-                    <th>Crecimiento</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><strong>Motor</strong></td>
-                    <td>452</td>
-                    <td>$18,450.00</td>
-                    <td><span style="color: var(--success);"><i class="fas fa-caret-up"></i> 8.4%</span></td>
-                </tr>
-                <tr>
-                    <td><strong>Frenos</strong></td>
-                    <td>310</td>
-                    <td>$12,120.00</td>
-                    <td><span style="color: var(--success);"><i class="fas fa-caret-up"></i> 12.1%</span></td>
-                </tr>
-                <tr>
-                    <td><strong>Suspensión</strong></td>
-                    <td>215</td>
-                    <td>$9,240.00</td>
-                    <td><span style="color: var(--danger);"><i class="fas fa-caret-down"></i> 2.4%</span></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
 
-<div class="card">
-    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1.5rem; color: var(--primary);">Resumen Mensual de Gestión</h3>
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;">
-        <div>
-            <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Ingresos Totales</p>
-            <h4 style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">$45,280.00</h4>
-            <span style="font-size: 0.75rem; color: var(--success);"><i class="fas fa-arrow-up"></i> +12% vs mes anterior</span>
-        </div>
-        <div>
-            <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Promedio por Pedido</p>
-            <h4 style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">$365.15</h4>
-            <span style="font-size: 0.75rem; color: var(--success);"><i class="fas fa-arrow-up"></i> +5% vs mes anterior</span>
-        </div>
-        <div>
-            <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Tiempo de Entrega</p>
-            <h4 style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">2.4 días</h4>
-            <span style="font-size: 0.75rem; color: var(--danger);"><i class="fas fa-arrow-down"></i> -0.2 días vs mes anterior</span>
-        </div>
-    </div>
-</div>
+<script>
+// Manejar selección de formato
+document.querySelectorAll('.format-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const target = this.dataset.target;
+        const format = this.dataset.format;
+        
+        // Actualizar botón activo
+        document.querySelectorAll(`[data-target="${target}"]`).forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Actualizar input hidden
+        document.getElementById(`format-${target}`).value = format;
+    });
+});
+</script>
 {% endblock %}

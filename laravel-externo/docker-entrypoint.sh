@@ -30,11 +30,11 @@ if ! grep -q "APP_KEY=base64" .env; then
 fi
 
 # 4. Esperar a la Base de Datos
-echo "Esperando a la base de datos (db:3306)..."
+echo "Esperando a la base de datos (db:5432)..."
 # Desactivamos set -e momentáneamente para el bucle de conexión
 set +e
 for i in {1..30}; do
-    if php -r "new PDO('mysql:host=$DB_HOST;port=$DB_PORT', '$DB_USERNAME', '$DB_PASSWORD');" > /dev/null 2>&1; then
+    if php -r "new PDO('pgsql:host=$DB_HOST;port=$DB_PORT;dbname=$DB_DATABASE', '$DB_USERNAME', '$DB_PASSWORD');" > /dev/null 2>&1; then
         echo "¡Base de datos conectada!"
         DB_READY=true
         break
@@ -50,8 +50,8 @@ if [ "$DB_READY" != true ]; then
 fi
 
 # 5. Base de Datos y Optimización
-echo "Ejecutando migraciones..."
-php artisan migrate --force
+echo "Las tablas ya existen (creadas por FastAPI). Saltando migraciones automáticas para evitar errores."
+# php artisan migrate --force
 
 echo "Optimizando Laravel (Caché de configuración, rutas y vistas)..."
 # Primero limpiamos para evitar conflictos y luego cacheamos

@@ -408,19 +408,6 @@
     </header>
 
     <main class="main">
-        @php
-            $orders = [
-                ['id' => 'PED-2847', 'date' => '25 Feb 2025', 'items' => 4, 'status' => 'warning', 'status_label' => 'En proceso',  'total' => '$1,240.00'],
-                ['id' => 'PED-2812', 'date' => '20 Feb 2025', 'items' => 2, 'status' => 'success', 'status_label' => 'Entregado',   'total' => '$890.50'],
-                ['id' => 'PED-2798', 'date' => '15 Feb 2025', 'items' => 6, 'status' => 'error',   'status_label' => 'Cancelado',   'total' => '$320.00'],
-                ['id' => 'PED-2761', 'date' => '08 Feb 2025', 'items' => 3, 'status' => 'success', 'status_label' => 'Entregado',   'total' => '$1,580.00'],
-                ['id' => 'PED-2740', 'date' => '01 Feb 2025', 'items' => 1, 'status' => 'success', 'status_label' => 'Entregado',   'total' => '$245.00'],
-                ['id' => 'PED-2718', 'date' => '26 Ene 2025', 'items' => 5, 'status' => 'info',    'status_label' => 'Enviado',     'total' => '$2,100.00'],
-                ['id' => 'PED-2695', 'date' => '18 Ene 2025', 'items' => 2, 'status' => 'success', 'status_label' => 'Entregado',   'total' => '$460.00'],
-                ['id' => 'PED-2670', 'date' => '10 Ene 2025', 'items' => 3, 'status' => 'error',   'status_label' => 'Cancelado',   'total' => '$730.00'],
-            ];
-        @endphp
-
         <div class="page-header">
             <div>
                 <h1>Mis pedidos</h1>
@@ -429,26 +416,32 @@
         </div>
 
         {{-- Stats --}}
+        @php
+            $totalOrders = $orders->count();
+            $processingCount = $orders->whereIn('status', ['pending', 'processing', 'shipped'])->count();
+            $deliveredCount = $orders->where('status', 'delivered')->count();
+            $totalSpent = $orders->where('status', '!=', 'cancelled')->sum('total_price');
+        @endphp
         <div class="stats-strip">
             <div class="stat-card">
                 <div class="label">Total pedidos</div>
-                <div class="value">24</div>
+                <div class="value">{{ $totalOrders }}</div>
                 <div class="sub">Histórico completo</div>
             </div>
             <div class="stat-card">
                 <div class="label">En proceso</div>
-                <div class="value" style="color:var(--warning)">3</div>
+                <div class="value" style="color:var(--warning)">{{ $processingCount }}</div>
                 <div class="sub">Pendientes de entrega</div>
             </div>
             <div class="stat-card">
                 <div class="label">Entregados</div>
-                <div class="value" style="color:var(--success)">18</div>
+                <div class="value" style="color:var(--success)">{{ $deliveredCount }}</div>
                 <div class="sub">Completados con éxito</div>
             </div>
             <div class="stat-card">
                 <div class="label">Gasto total</div>
-                <div class="value">$14,320</div>
-                <div class="sub">Acumulado 2025</div>
+                <div class="value">${{ number_format($totalSpent, 2) }}</div>
+                <div class="sub">Acumulado total</div>
             </div>
         </div>
 
@@ -458,20 +451,10 @@
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
-                <input type="search" placeholder="Buscar por ID o producto..." aria-label="Buscar pedidos">
+                <input type="search" placeholder="Buscar por ID..." aria-label="Buscar pedidos">
             </div>
-            <select class="filter-select" aria-label="Filtrar por fecha">
-                <option>Últimos 30 días</option>
-                <option>Últimos 90 días</option>
-                <option>Este año</option>
-                <option>Todo el historial</option>
-            </select>
             <div class="status-tabs">
                 <button class="status-tab active" type="button">Todos</button>
-                <button class="status-tab" type="button">En proceso</button>
-                <button class="status-tab" type="button">Enviados</button>
-                <button class="status-tab" type="button">Entregados</button>
-                <button class="status-tab" type="button">Cancelados</button>
             </div>
         </div>
 
@@ -483,7 +466,6 @@
                         <tr>
                             <th>ID Pedido</th>
                             <th>Fecha</th>
-                            <th>Artículos</th>
                             <th>Estatus</th>
                             <th>Total</th>
                             <th>Acciones</th>
@@ -491,26 +473,42 @@
                     </thead>
                     <tbody>
                         @foreach($orders as $order)
+                        @php
+                            $statusClass = match(strtolower($order->status)) {
+                                'pending', 'processing' => 'warning',
+                                'shipped' => 'info',
+                                'delivered' => 'success',
+                                'cancelled' => 'error',
+                                default => 'secondary'
+                            };
+                            $statusLabel = match(strtolower($order->status)) {
+                                'pending' => 'Pendiente',
+                                'processing' => 'En proceso',
+                                'shipped' => 'Enviado',
+                                'delivered' => 'Entregado',
+                                'cancelled' => 'Cancelado',
+                                default => $order->status
+                            };
+                        @endphp
                         <tr>
-                            <td><span class="order-id">{{ $order['id'] }}</span></td>
-                            <td><span class="order-date">{{ $order['date'] }}</span></td>
-                            <td><span class="order-items">{{ $order['items'] }} {{ $order['items'] === 1 ? 'artículo' : 'artículos' }}</span></td>
-                            <td><span class="badge badge-{{ $order['status'] }}">{{ $order['status_label'] }}</span></td>
-                            <td><span class="order-total">{{ $order['total'] }}</span></td>
+                            <td><span class="order-id">PED-{{ $order->id }}</span></td>
+                            <td><span class="order-date">{{ $order->created_at->format('d M Y') }}</span></td>
+                            <td><span class="badge badge-{{ $statusClass }}">{{ $statusLabel }}</span></td>
+                            <td><span class="order-total">${{ number_format($order->total_price, 2) }}</span></td>
                             <td>
                                 <div class="action-btns">
-                                    <a href="{{ url('/pedidos/' . str_replace('PED-', '', $order['id'])) }}" class="btn-detail">
+                                    <a href="{{ url('/pedidos/' . $order->id) }}" class="btn-detail">
                                         Ver detalle
                                     </a>
-                                    <button type="button" class="btn-icon" title="Descargar comprobante" aria-label="Descargar">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 4v11"/>
-                                        </svg>
-                                    </button>
                                 </div>
                             </td>
                         </tr>
                         @endforeach
+                        @if($orders->count() == 0)
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-secondary);">No se encontraron pedidos.</td>
+                            </tr>
+                        @endif
                     </tbody>
                 </table>
             </div>
@@ -518,44 +516,41 @@
             {{-- Mobile cards --}}
             <div class="mobile-orders">
                 @foreach($orders as $order)
+                @php
+                    $statusClass = match(strtolower($order->status)) {
+                        'pending', 'processing' => 'warning',
+                        'shipped' => 'info',
+                        'delivered' => 'success',
+                        'cancelled' => 'error',
+                        default => 'secondary'
+                    };
+                    $statusLabel = match(strtolower($order->status)) {
+                        'pending' => 'Pendiente',
+                        'processing' => 'En proceso',
+                        'shipped' => 'Enviado',
+                        'delivered' => 'Entregado',
+                        'cancelled' => 'Cancelado',
+                        default => $order->status
+                    };
+                @endphp
                 <div class="mobile-order-card">
                     <div class="mob-row">
-                        <span class="order-id">{{ $order['id'] }}</span>
-                        <span class="badge badge-{{ $order['status'] }}">{{ $order['status_label'] }}</span>
+                        <span class="order-id">PED-{{ $order->id }}</span>
+                        <span class="badge badge-{{ $statusClass }}">{{ $statusLabel }}</span>
                     </div>
                     <div class="mob-row">
                         <span class="mob-label">Fecha</span>
-                        <span class="mob-val">{{ $order['date'] }}</span>
-                    </div>
-                    <div class="mob-row">
-                        <span class="mob-label">Artículos</span>
-                        <span class="mob-val">{{ $order['items'] }}</span>
+                        <span class="mob-val">{{ $order->created_at->format('d M Y') }}</span>
                     </div>
                     <div class="mob-row">
                         <span class="mob-label">Total</span>
-                        <span class="mob-val order-total">{{ $order['total'] }}</span>
+                        <span class="mob-val order-total">${{ number_format($order->total_price, 2) }}</span>
                     </div>
                     <div class="mob-row" style="margin-top:0.75rem;">
-                        <a href="{{ url('/pedidos/' . str_replace('PED-', '', $order['id'])) }}" class="btn-detail" style="flex:1;justify-content:center;">Ver detalle</a>
+                        <a href="{{ url('/pedidos/' . $order->id) }}" class="btn-detail" style="flex:1;justify-content:center;">Ver detalle</a>
                     </div>
                 </div>
                 @endforeach
-            </div>
-
-            {{-- Pagination --}}
-            <div class="pagination">
-                <span class="pagination-info">Mostrando 1–8 de 24 pedidos</span>
-                <div class="pagination-btns">
-                    <button class="pg-btn" disabled aria-label="Anterior">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    </button>
-                    <button class="pg-btn active">1</button>
-                    <button class="pg-btn">2</button>
-                    <button class="pg-btn">3</button>
-                    <button class="pg-btn" aria-label="Siguiente">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                    </button>
-                </div>
             </div>
         </div>
     </main>

@@ -390,108 +390,133 @@
             <div class="header-dropdown" id="user-dropdown">
                 <a href="{{ url('/perfil') }}">Mi perfil</a>
                 <a href="{{ url('/perfil/configuracion') }}">Configuración</a>
-                <a href="{{ url('/login') }}">Cerrar sesión</a>
+                <a href="{{ url('/logout') }}">Cerrar sesión</a>
             </div>
         </div>
     </header>
 
     <main class="main">
+        @if($errors->any())
+            <div style="background: rgba(239, 68, 68, 0.1); color: var(--error); padding: 1rem; border-radius: 12px; margin-bottom: 2rem; border: 1px solid rgba(239, 68, 68, 0.2); font-weight: 500;">
+                <i class="fas fa-exclamation-circle" style="margin-right:0.5rem;"></i> {{ $errors->first('msg') ?? 'Ocurrió un problema con el carrito.' }}
+            </div>
+        @endif
+        
         <div class="page-header">
             <div>
                 <h1>Catálogo de autopartes</h1>
                 <p>Encuentra y agrega productos a tu pedido</p>
             </div>
-            <a href="{{ url('/pedidos/crear') }}" class="btn-cart" id="cart-btn">
+            <a href="{{ url('/carrito') }}" class="btn-cart" id="cart-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                Ver Carrito (<span id="cart-count">3</span>)
+                Ver Carrito (<span id="cart-count">{{ \App\Models\CartItem::where('user_id', auth()->id())->sum('quantity') }}</span>)
             </a>
         </div>
 
-        <div class="search-wrap">
+        <form class="search-wrap" method="GET" action="{{ url('/catalogo') }}">
             <div class="search-bar">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                <input type="search" placeholder="Buscar por nombre, código o categoría" aria-label="Buscar productos">
+                <input type="search" name="q" value="{{ $activeSearch ?? '' }}" placeholder="Buscar por nombre o descripción" aria-label="Buscar productos">
+                @if($activeCategory)
+                    <input type="hidden" name="category" value="{{ $activeCategory }}">
+                @endif
             </div>
             <div class="filters-wrap">
                 <button type="button" class="filters-toggle" id="filters-toggle" aria-expanded="false">Filtros</button>
-                <div class="filters-row" id="filters-row">
-                    <button type="button" class="filter-pill active">Categoría</button>
-                    <button type="button" class="filter-pill">Marca</button>
-                    <button type="button" class="filter-pill">Precio</button>
-                    <button type="button" class="filter-pill">Disponibilidad</button>
+                <div class="filters-row" id="filters-row" style="display:flex; justify-content:center;">
+                    <a href="{{ request()->fullUrlWithQuery(['category' => null]) }}" class="filter-pill {{ empty($activeCategory) ? 'active' : '' }}" style="text-decoration:none;">Todos</a>
+                    <a href="{{ request()->fullUrlWithQuery(['category' => 'Motor']) }}" class="filter-pill {{ ($activeCategory ?? '') == 'Motor' ? 'active' : '' }}" style="text-decoration:none;">Motor</a>
+                    <a href="{{ request()->fullUrlWithQuery(['category' => 'Suspensión']) }}" class="filter-pill {{ ($activeCategory ?? '') == 'Suspensión' ? 'active' : '' }}" style="text-decoration:none;">Suspensión</a>
+                    <a href="{{ request()->fullUrlWithQuery(['category' => 'Encendido']) }}" class="filter-pill {{ ($activeCategory ?? '') == 'Encendido' ? 'active' : '' }}" style="text-decoration:none;">Encendido</a>
                 </div>
-                <div class="active-tags" id="active-tags"></div>
             </div>
-        </div>
+        </form>
 
         <section class="recommended">
             <h3>Más solicitados</h3>
             <div class="recommended-scroll">
-                @foreach(['Filtro de aceite OE', 'Pastillas de freno delanteras', 'Bujía de encendido', 'Bomba de agua'] as $i => $name)
-                @php $recImg = strtolower(explode(' ', trim($name))[0]) . '.png'; @endphp
+                @foreach($autoparts->take(4) as $p)
                 <div class="rec-card">
                     <div class="img">
-                        <img src="{{ asset('images/' . $recImg) }}" alt="{{ $name }}" onerror="this.style.display='none'">
+                        @if($p->image_url)
+                            <img src="{{ $p->image_url }}" alt="{{ $p->name }}">
+                        @else
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 32px; height: 32px; opacity: 0.2; margin: 0 auto;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        @endif
                     </div>
-                    <div class="name">{{ $name }}</div>
-                    <div class="price">${{ 180 + $i * 40 }}</div>
+                    <div class="name">{{ $p->name }}</div>
+                    <div class="price">${{ number_format($p->price, 2) }}</div>
                 </div>
                 @endforeach
             </div>
         </section>
 
         <div class="products-grid" id="products-grid">
+            @foreach($autoparts as $p)
             @php
-                $products = [
-                    ['name' => 'Filtro de aceite premium', 'sku' => 'SKU-2041', 'price' => '245.00', 'stock' => 'available', 'stock_label' => 'Disponible'],
-                    ['name' => 'Pastillas de freno delanteras', 'sku' => 'SKU-3082', 'price' => '420.00', 'stock' => 'available', 'stock_label' => 'Disponible'],
-                    ['name' => 'Bujía de encendido iridio', 'sku' => 'SKU-5103', 'price' => '185.00', 'stock' => 'low', 'stock_label' => 'Bajo stock'],
-                    ['name' => 'Bomba de agua', 'sku' => 'SKU-7204', 'price' => '680.00', 'stock' => 'available', 'stock_label' => 'Disponible'],
-                    ['name' => 'Correa de distribución', 'sku' => 'SKU-8305', 'price' => '320.00', 'stock' => 'none', 'stock_label' => 'Sin stock'],
-                    ['name' => 'Sensor de oxígeno', 'sku' => 'SKU-9406', 'price' => '395.00', 'stock' => 'available', 'stock_label' => 'Disponible'],
-                    ['name' => 'Amortiguador trasero', 'sku' => 'SKU-1057', 'price' => '550.00', 'stock' => 'low', 'stock_label' => 'Bajo stock'],
-                    ['name' => 'Bomba de combustible', 'sku' => 'SKU-2188', 'price' => '720.00', 'stock' => 'available', 'stock_label' => 'Disponible'],
-                ];
+                $stockStatus = 'available';
+                $stockLabel = 'Disponible';
+                if ($p->stock <= 0) {
+                    $stockStatus = 'none';
+                    $stockLabel = 'Sin stock';
+                } elseif ($p->stock < 10) {
+                    $stockStatus = 'low';
+                    $stockLabel = 'Bajo stock';
+                }
             @endphp
-            @foreach($products as $index => $p)
-            @php $productImg = strtolower(explode(' ', trim($p['name']))[0]) . '.png'; @endphp
-            <article class="product-card" data-product-id="{{ $index + 1 }}">
-                <a href="{{ url('/catalogo/' . ($index + 1)) }}" style="text-decoration: none; color: inherit;">
+            <article class="product-card" data-product-id="{{ $p->id }}">
+                <a href="{{ url('/catalogo/' . $p->id) }}" style="text-decoration: none; color: inherit;">
                     <div class="img-wrap">
-                        <img src="{{ asset('images/' . $productImg) }}" alt="{{ $p['name'] }}" onerror="this.style.display='none'">
+                        @if($p->image_url)
+                            <img src="{{ $p->image_url }}" alt="{{ $p->name }}">
+                        @else
+                            <div style="padding: 2rem; text-align: center;">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 48px; height: 48px; opacity: 0.2;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                <p style="margin-top: 0.5rem; opacity: 0.5;">Sin imagen</p>
+                            </div>
+                        @endif
                     </div>
                 </a>
                 <div class="body">
-                    <a href="{{ url('/catalogo/' . ($index + 1)) }}" style="text-decoration: none; color: inherit;">
-                        <h3 class="name">{{ $p['name'] }}</h3>
+                    <a href="{{ url('/catalogo/' . $p->id) }}" style="text-decoration: none; color: inherit;">
+                        <h3 class="name">{{ $p->name }}</h3>
                     </a>
-                    <div class="sku">{{ $p['sku'] }}</div>
-                    <div class="price">${{ $p['price'] }}</div>
-                    <span class="stock-badge stock-{{ $p['stock'] }}">{{ $p['stock_label'] }}</span>
+                    <div class="sku">ID: {{ $p->id }} | {{ $p->category }}</div>
+                    <div class="price">${{ number_format($p->price, 2) }}</div>
+                    <span class="stock-badge stock-{{ $stockStatus }}">{{ $stockLabel }} ({{ $p->stock }})</span>
                     <div class="qty-row">
                         <button type="button" class="qty-btn qty-minus" aria-label="Menos">−</button>
                         <span class="qty-value" data-qty="1">1</span>
                         <button type="button" class="qty-btn qty-plus" aria-label="Más">+</button>
                     </div>
-                    <button type="button" class="btn-add" {{ $p['stock'] === 'none' ? 'disabled' : '' }}>Agregar</button>
+                    <button type="button" class="btn-add" {{ $p->stock <= 0 ? 'disabled' : '' }}>Agregar</button>
                 </div>
             </article>
             @endforeach
+            @if($autoparts->count() == 0)
+                <div style="grid-column: 1 / -1; text-align: center; padding: 4rem;">
+                    <h3>No hay productos disponibles en este momento.</h3>
+                </div>
+            @endif
         </div>
     </main>
 
     <div class="toast" id="toast" role="status" aria-live="polite">Producto agregado</div>
 
     <div class="mobile-cart-bar">
-        <a href="{{ url('/pedidos/crear') }}" class="btn-cart" id="cart-btn-mobile">
+        <a href="{{ url('/carrito') }}" class="btn-cart" id="cart-btn-mobile">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:1.25rem;height:1.25rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-            Ver pedido (<span id="cart-count-mobile">3</span>)
+            Ver carrito (<span id="cart-count-mobile">{{ \App\Models\CartItem::where('user_id', auth()->id())->sum('quantity') }}</span>)
         </a>
     </div>
 
     <script>
         (function() {
-            var cartCount = 3;
+            var cartCount = {{ \App\Models\CartItem::where('user_id', auth()->id())->sum('quantity') }};
             var toast = document.getElementById('toast');
             var cartEls = document.querySelectorAll('#cart-count, #cart-count-mobile');
 
@@ -519,9 +544,7 @@
             });
 
             document.querySelectorAll('.filter-pill').forEach(function(pill) {
-                pill.addEventListener('click', function() {
-                    this.classList.toggle('active');
-                });
+                // If the filter pill is an anchor tag, let it naturally navigate.
             });
 
             document.querySelectorAll('.product-card').forEach(function(card) {
@@ -543,10 +566,32 @@
 
                 btnAdd.addEventListener('click', function() {
                     if (this.disabled) return;
+                    
                     var q = getQty();
-                    updateCartCount(cartCount + q);
-                    toast.classList.add('show');
-                    setTimeout(function() { toast.classList.remove('show'); }, 2500);
+                    var id = card.getAttribute('data-product-id');
+                    var oldText = this.textContent;
+                    this.textContent = '...';
+                    this.disabled = true;
+                    
+                    fetch('{{ url("/carrito/agregar") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({ autopart_id: id, quantity: q })
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        this.textContent = oldText;
+                        this.disabled = false;
+                        updateCartCount(data.cartCount);
+                        toast.classList.add('show');
+                        setTimeout(function() { toast.classList.remove('show'); }, 2500);
+                    }).catch(e => {
+                        this.textContent = oldText;
+                        this.disabled = false;
+                    });
                 });
             });
         })();

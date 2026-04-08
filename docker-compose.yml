@@ -10,9 +10,9 @@ services:
     ports:
       - "8000:80"
     environment:
-      - DB_CONNECTION=mysql
+      - DB_CONNECTION=pgsql
       - DB_HOST=db
-      - DB_PORT=3306
+      - DB_PORT=5432
       - DB_DATABASE=macuin_db
       - DB_USERNAME=macuin_user
       - DB_PASSWORD=macuin_password
@@ -20,6 +20,27 @@ services:
       - ./laravel-externo:/var/www/html:cached
       - laravel-vendor:/var/www/html/vendor
       - laravel-node-modules:/var/www/html/node_modules
+    depends_on:
+      - db
+
+  # API Central (FastAPI)
+  fastapi-api:
+    build:
+      context: ./fastapi-api
+      dockerfile: Dockerfile
+    container_name: macuin-api
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    environment:
+      - DB_USERNAME=macuin_user
+      - DB_PASSWORD=macuin_password
+      - DB_DATABASE=macuin_db
+      - DB_HOST=db
+      - DB_PORT=5432
+      - SECRET_KEY=clave_secreta_super_segura_para_jwt
+    volumes:
+      - ./fastapi-api:/app
     depends_on:
       - db
 
@@ -32,26 +53,29 @@ services:
     restart: unless-stopped
     ports:
       - "5000:5000"
+    environment:
+      - API_URL=http://macuin-api:8000
+      - SECRET_KEY=flask_secret_key_super_segura
     volumes:
       - ./flask-interno:/app
+    depends_on:
+      - fastapi-api
 
-  # Base de datos MySQL compartida
+  # Base de datos PostgreSQL compartida
   db:
-    image: mysql:8.0
+    image: postgres:15
     container_name: macuin-db
     restart: unless-stopped
-    tty: true
     ports:
-      - "3307:3306"
+      - "5433:5432"
     environment:
-      MYSQL_DATABASE: macuin_db
-      MYSQL_USER: macuin_user
-      MYSQL_PASSWORD: macuin_password
-      MYSQL_ROOT_PASSWORD: root_password
+      POSTGRES_DB: macuin_db
+      POSTGRES_USER: macuin_user
+      POSTGRES_PASSWORD: macuin_password
     volumes:
-      - mysql-data:/var/lib/mysql
+      - postgres-data:/var/lib/postgresql/data
 
 volumes:
-  mysql-data:
+  postgres-data:
   laravel-vendor:
   laravel-node-modules:

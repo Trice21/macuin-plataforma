@@ -274,9 +274,9 @@
 
         <div class="grid">
             <section class="card profile-summary">
-                <div class="avatar">{{ strtoupper(substr(optional(auth()->user())->name ?? 'Usuario', 0, 1)) }}</div>
-                <h2>{{ optional(auth()->user())->name ?? 'Usuario externo' }}</h2>
-                <p>Cliente MACUIN</p>
+                <div class="avatar">{{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}</div>
+                <h2>{{ auth()->user()->name ?? 'Usuario' }}</h2>
+                <p>{{ auth()->user()->role ?? 'Cliente' }} MACUIN</p>
             </section>
 
             <section class="card">
@@ -284,15 +284,15 @@
                 <div class="info-grid">
                     <div class="info-item">
                         <span>Nombre</span>
-                        <strong>{{ optional(auth()->user())->name ?? 'Usuario externo' }}</strong>
+                        <strong>{{ auth()->user()->name ?? 'No disponible' }}</strong>
                     </div>
                     <div class="info-item">
                         <span>Correo</span>
-                        <strong>{{ optional(auth()->user())->email ?? 'cliente@macuin.com' }}</strong>
+                        <strong>{{ auth()->user()->email ?? 'No disponible' }}</strong>
                     </div>
                     <div class="info-item">
                         <span>Tipo de cuenta</span>
-                        <strong>Cliente</strong>
+                        <strong>{{ ucfirst(auth()->user()->role ?? 'cliente') }}</strong>
                     </div>
                     <div class="info-item">
                         <span>Estado</span>
