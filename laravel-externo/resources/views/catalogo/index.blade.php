@@ -409,7 +409,7 @@
             </div>
             <a href="{{ url('/carrito') }}" class="btn-cart" id="cart-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                Ver Carrito (<span id="cart-count">{{ \App\Models\CartItem::where('user_id', auth()->id())->sum('quantity') }}</span>)
+                Ver Carrito (<span id="cart-count">{{ $cartCount ?? 0 }}</span>)
             </a>
         </div>
 
@@ -510,13 +510,13 @@
     <div class="mobile-cart-bar">
         <a href="{{ url('/carrito') }}" class="btn-cart" id="cart-btn-mobile">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:1.25rem;height:1.25rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-            Ver carrito (<span id="cart-count-mobile">{{ \App\Models\CartItem::where('user_id', auth()->id())->sum('quantity') }}</span>)
+            Ver carrito (<span id="cart-count-mobile">{{ $cartCount ?? 0 }}</span>)
         </a>
     </div>
 
     <script>
         (function() {
-            var cartCount = {{ \App\Models\CartItem::where('user_id', auth()->id())->sum('quantity') }};
+            var cartCount = {{ (int) ($cartCount ?? 0) }};
             var toast = document.getElementById('toast');
             var cartEls = document.querySelectorAll('#cart-count, #cart-count-mobile');
 

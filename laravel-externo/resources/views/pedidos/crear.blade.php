@@ -133,7 +133,10 @@
         .summary-total { display: flex; justify-content: space-between; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(0,0,0,0.05); font-weight: 700; font-size: 1.25rem; color: var(--primary); }
         
         .btn-confirm { width: 100%; padding: 1.25rem; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 1.125rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin-top: 2rem; }
-        .btn-confirm:hover { background: var(--secondary); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(31, 58, 95, 0.2); }
+        .btn-confirm:hover:not(:disabled) { background: var(--secondary); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(31, 58, 95, 0.2); }
+        .btn-confirm:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+        .checkout-alert { padding: 0.875rem 1rem; border-radius: 10px; margin-bottom: 1.25rem; font-size: 0.9375rem; }
+        .checkout-alert.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
         
         .product-preview { display: flex; align-items: center; gap: 1rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
         .preview-img { width: 80px; height: 80px; background: white; border-radius: 12px; object-fit: contain; padding: 0.5rem; border: 1px solid rgba(0,0,0,0.05); }
@@ -182,33 +185,43 @@
     </header>
 
     <main class="main">
-        <div class="grid-checkout">
-            <!-- Datos de envío -->
+        <form method="POST" action="{{ url('/pedidos/finalizar') }}" id="checkout-form">
+            @csrf
+            @php
+                $nameParts = preg_split('/\s+/', trim(auth()->user()->name ?? ''), 2);
+                $defaultFirst = $nameParts[0] ?? '';
+                $defaultLast = $nameParts[1] ?? '';
+            @endphp
+            <div class="grid-checkout">
+            <!-- Datos de envío (solo UI; el pedido se crea con el carrito vía API) -->
             <div class="card">
+                @if($errors->has('order'))
+                    <div class="checkout-alert error" role="alert">{{ $errors->first('order') }}</div>
+                @endif
                 <h3 class="section-title"><i class="fas fa-shipping-fast"></i> Información de Envío</h3>
-                <form>
+                <div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div class="form-group">
                             <label class="form-label">Nombre(s)</label>
-                            <input type="text" class="form-input" placeholder="Ej. Juan">
+                            <input type="text" name="ship_first" class="form-input" placeholder="Ej. Juan" autocomplete="given-name" value="{{ old('ship_first', $defaultFirst) }}">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Apellidos</label>
-                            <input type="text" class="form-input" placeholder="Ej. Pérez">
+                            <input type="text" name="ship_last" class="form-input" placeholder="Ej. Pérez" autocomplete="family-name" value="{{ old('ship_last', $defaultLast) }}">
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Dirección Completa</label>
-                        <input type="text" class="form-input" placeholder="Calle, Número, Colonia, CP">
+                        <input type="text" class="form-input" placeholder="Calle, Número, Colonia, CP" autocomplete="street-address">
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div class="form-group">
                             <label class="form-label">Ciudad</label>
-                            <input type="text" class="form-input" placeholder="Ej. Ciudad de México">
+                            <input type="text" class="form-input" placeholder="Ej. Ciudad de México" autocomplete="address-level2">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Teléfono</label>
-                            <input type="tel" class="form-input" placeholder="+52 ...">
+                            <input type="tel" class="form-input" placeholder="+52 ..." autocomplete="tel">
                         </div>
                     </div>
                     
@@ -221,7 +234,7 @@
                         </div>
                         <i class="fas fa-check-circle" style="margin-left: auto; color: var(--secondary);"></i>
                     </div>
-                </form>
+                </div>
             </div>
 
             <!-- Resumen lateral -->
@@ -231,10 +244,14 @@
                     
                     @foreach($cartItems as $item)
                     <div class="product-preview" style="margin-bottom: 0.75rem;">
-                        @if($item->autopart->image_url)
-                            <img src="{{ $item->autopart->image_url }}" class="preview-img" alt="{{ $item->autopart->name }}">
+                        @php
+                            $img = $item->autopart->image_url;
+                            $imgOk = $img && $img !== 'None' && filter_var($img, FILTER_VALIDATE_URL);
+                        @endphp
+                        @if($imgOk)
+                            <img src="{{ $img }}" class="preview-img" alt="{{ $item->autopart->name }}">
                         @else
-                            <img src="https://via.placeholder.com/150" class="preview-img">
+                            <img src="https://via.placeholder.com/150" class="preview-img" alt="">
                         @endif
                         <div class="preview-info" style="flex:1;">
                             <p class="preview-name">{{ $item->autopart->name }} (x{{ $item->quantity }})</p>
@@ -265,7 +282,7 @@
                         </div>
                     </div>
                     
-                    <button class="btn-confirm">
+                    <button type="submit" class="btn-confirm" id="btn-finalizar">
                         <i class="fas fa-lock"></i> Finalizar Pedido
                     </button>
                     
@@ -274,7 +291,8 @@
                     </p>
                 </div>
             </div>
-        </div>
+            </div>
+        </form>
     </main>
 
     <script>
@@ -289,6 +307,13 @@
                 document.getElementById('user-menu-btn').setAttribute('aria-expanded', 'false');
             }
         });
+        var checkoutForm = document.getElementById('checkout-form');
+        if (checkoutForm) {
+            checkoutForm.addEventListener('submit', function() {
+                var btn = document.getElementById('btn-finalizar');
+                if (btn) { btn.disabled = true; }
+            });
+        }
     </script>
 </body>
 </html>

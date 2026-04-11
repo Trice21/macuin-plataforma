@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database import get_db
-from models.models import Order, OrderItem, Autopart, User
+from models.models import Order, OrderItem, Autopart, User, CartItem
 from schemas.schemas import OrderOut, OrderCreate, OrderStatus
 from .auth import get_current_user
 
@@ -22,7 +22,12 @@ def update_order_status(order_id: int, status: OrderStatus, db: Session = Depend
     
     order.status = status
     db.commit()
-    db.refresh(order)
+    order = (
+        db.query(Order)
+        .options(selectinload(Order.items).selectinload(OrderItem.autopart))
+        .filter(Order.id == order_id)
+        .first()
+    )
     return order
 
 @router.post("/", response_model=OrderOut)
@@ -53,11 +58,18 @@ def create_order(order_in: OrderCreate, db: Session = Depends(get_db), current_u
         )
         total_price += autopart.price * item.quantity
         db.add(order_item)
-    
+
+    db.query(CartItem).filter(CartItem.user_id == current_user.id).delete(synchronize_session=False)
+
     new_order.total_price = total_price
     db.commit()
-    db.refresh(new_order)
-    return new_order
+    order = (
+        db.query(Order)
+        .options(selectinload(Order.items).selectinload(OrderItem.autopart))
+        .filter(Order.id == new_order.id)
+        .first()
+    )
+    return order
 
 @router.get("/", response_model=list[OrderOut])
 def get_user_orders(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -74,11 +86,16 @@ def get_all_orders(db: Session = Depends(get_db), current_user: User = Depends(g
 
 @router.get("/{order_id}", response_model=OrderOut)
 def get_order(order_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    order = db.query(Order).filter(Order.id == order_id).first()
+    order = (
+        db.query(Order)
+        .options(selectinload(Order.items).selectinload(OrderItem.autopart))
+        .filter(Order.id == order_id)
+        .first()
+    )
     if not order:
         raise HTTPException(status_code=404, detail="Pedido no encontrado")
-    
+
     if order.user_id != current_user.id and current_user.role != "admin":
         raise HTTPException(status_code=403, detail="No tienes permisos")
-        
+
     return order

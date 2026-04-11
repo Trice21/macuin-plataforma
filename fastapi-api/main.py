@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 import models.models as models
 from database import engine, Base, SessionLocal
-from routers import auth, users, autoparts, orders, reports
+from routers import auth, users, autoparts, orders, reports, cart
 from models.models import User, UserRole, Autopart
 from core.security import get_password_hash
 import time
@@ -74,6 +74,7 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(autoparts.router)
 app.include_router(orders.router)
+app.include_router(cart.router)
 app.include_router(reports.router)
 
 @app.get("/")

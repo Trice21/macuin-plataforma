@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 import sys
 import os
@@ -12,8 +15,20 @@ from .auth import get_admin_user
 router = APIRouter(prefix="/autoparts", tags=["autoparts"])
 
 @router.get("/", response_model=list[AutopartOut])
-def get_autoparts(db: Session = Depends(get_db)):
-    return db.query(Autopart).all()
+def get_autoparts(
+    db: Session = Depends(get_db),
+    q: Optional[str] = Query(None, description="Buscar en nombre o descripción"),
+    category: Optional[str] = Query(None),
+):
+    query = db.query(Autopart)
+    if q:
+        like = f"%{q}%"
+        query = query.filter(
+            or_(Autopart.name.ilike(like), Autopart.description.ilike(like))
+        )
+    if category:
+        query = query.filter(Autopart.category == category)
+    return query.all()
 
 @router.get("/{autopart_id}", response_model=AutopartOut)
 def get_autopart(autopart_id: int, db: Session = Depends(get_db)):

@@ -66,6 +66,23 @@ class AutopartOut(AutopartBase):
     class Config:
         from_attributes = True
 
+
+class CartItemAdd(BaseModel):
+    autopart_id: int
+    quantity: int = Field(ge=1)
+
+
+class CartItemOut(BaseModel):
+    id: int
+    user_id: int
+    autopart_id: int
+    quantity: int
+    autopart: AutopartOut
+
+    class Config:
+        from_attributes = True
+
+
 # --- Order Item Schemas ---
 class OrderItemBase(BaseModel):
     autopart_id: int
@@ -77,6 +94,7 @@ class OrderItemCreate(OrderItemBase):
 class OrderItemOut(OrderItemBase):
     id: int
     unit_price: float
+    autopart: Optional[AutopartOut] = None
 
     class Config:
         from_attributes = True

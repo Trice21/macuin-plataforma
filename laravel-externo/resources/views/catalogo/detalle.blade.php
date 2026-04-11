@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Detalle de Autoparte — MACUIN</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -56,8 +57,20 @@
         .section-title { font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem; color: var(--primary); border-bottom: 2px solid var(--bg); padding-bottom: 0.5rem; }
         .product-desc { font-size: 1rem; line-height: 1.6; color: var(--text-secondary); margin-bottom: 2rem; }
         
-        .btn-order { display: flex; align-items: center; justify-content: center; gap: 0.75rem; width: 100%; padding: 1.25rem; background: var(--primary); color: white; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 1.125rem; transition: all 0.2s; }
+        .product-actions { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.5rem; }
+        .qty-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem; }
+        .qty-row label { font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); }
+        .qty-controls { display: inline-flex; align-items: center; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
+        .qty-controls button { width: 40px; height: 40px; border: none; background: var(--bg); color: var(--primary); font-size: 1.25rem; cursor: pointer; }
+        .qty-controls button:hover { background: #e2e8f0; }
+        .qty-controls span { min-width: 2.5rem; text-align: center; font-weight: 600; }
+        .btn-add-cart { display: flex; align-items: center; justify-content: center; gap: 0.75rem; width: 100%; padding: 1.1rem; background: #fff; color: var(--primary); border: 2px solid var(--primary); border-radius: 12px; font-weight: 700; font-size: 1.05rem; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+        .btn-add-cart:hover:not(:disabled) { background: rgba(31, 58, 95, 0.06); }
+        .btn-add-cart:disabled { opacity: 0.55; cursor: not-allowed; }
+        .btn-order { display: flex; align-items: center; justify-content: center; gap: 0.75rem; width: 100%; padding: 1.25rem; background: var(--primary); color: white; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 1.125rem; transition: all 0.2s; border: none; cursor: pointer; font-family: inherit; }
         .btn-order:hover { background: var(--secondary); transform: translateY(-2px); }
+        .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(120%); background: var(--text-primary); color: #fff; padding: 0.875rem 1.5rem; border-radius: 12px; font-weight: 500; font-size: 0.9375rem; box-shadow: 0 8px 24px rgba(0,0,0,0.15); z-index: 100; opacity: 0; transition: transform 0.3s, opacity 0.3s; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
     </style>
 </head>
 <body>
@@ -107,12 +120,92 @@
                     • Diseñado para motores de 4 y 6 cilindros.<br>
                     • Instalación rápida plug-and-play.
                 </p>
-                
-                <a href="/pedidos/crear?id={{ $autopart->id }}" class="btn-order">
-                    <i class="fas fa-shopping-cart"></i> Realizar Pedido Ahora
-                </a>
+
+                <div class="product-actions">
+                    @if(($autopart->stock ?? 0) > 0)
+                        <div class="qty-row">
+                            <label for="detail-qty">Cantidad</label>
+                            <div class="qty-controls">
+                                <button type="button" id="detail-qty-minus" aria-label="Menos">−</button>
+                                <span id="detail-qty-val" data-qty="1">1</span>
+                                <button type="button" id="detail-qty-plus" aria-label="Más">+</button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-add-cart" id="btn-add-cart-detail" data-autopart-id="{{ $autopart->id }}" data-max-stock="{{ (int) $autopart->stock }}">
+                            <i class="fas fa-cart-plus"></i> Agregar al carrito
+                        </button>
+                    @else
+                        <p style="color: var(--danger); font-weight: 600; margin-bottom: 0.5rem;">No hay existencias disponibles.</p>
+                    @endif
+                    <a href="{{ url('/pedidos/crear') }}" class="btn-order">
+                        <i class="fas fa-shopping-cart"></i> Realizar pedido ahora
+                    </a>
+                </div>
             </div>
         </div>
     </main>
+
+    <div class="toast" id="detail-toast" role="status" aria-live="polite">Producto agregado al carrito</div>
+
+    <script>
+        (function() {
+            var btn = document.getElementById('btn-add-cart-detail');
+            var toast = document.getElementById('detail-toast');
+            var qtyEl = document.getElementById('detail-qty-val');
+            var minus = document.getElementById('detail-qty-minus');
+            var plus = document.getElementById('detail-qty-plus');
+            if (!btn || !qtyEl) return;
+
+            var maxStock = parseInt(btn.getAttribute('data-max-stock') || '99', 10);
+
+            function getQty() {
+                return parseInt(qtyEl.getAttribute('data-qty') || '1', 10);
+            }
+            function setQty(n) {
+                n = Math.max(1, Math.min(maxStock, n));
+                qtyEl.setAttribute('data-qty', n);
+                qtyEl.textContent = n;
+            }
+            if (minus) minus.addEventListener('click', function() { setQty(getQty() - 1); });
+            if (plus) plus.addEventListener('click', function() { setQty(getQty() + 1); });
+
+            btn.addEventListener('click', function() {
+                if (btn.disabled) return;
+                var id = btn.getAttribute('data-autopart-id');
+                var q = getQty();
+                var oldHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Agregando…';
+                btn.disabled = true;
+
+                fetch('{{ url("/carrito/agregar") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ autopart_id: parseInt(id, 10), quantity: q })
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    btn.innerHTML = oldHtml;
+                    btn.disabled = false;
+                    if (data.success) {
+                        if (toast) {
+                            toast.classList.add('show');
+                            setTimeout(function() { toast.classList.remove('show'); }, 2500);
+                        }
+                    } else {
+                        alert(data.message || 'No se pudo agregar al carrito.');
+                    }
+                })
+                .catch(function() {
+                    btn.innerHTML = oldHtml;
+                    btn.disabled = false;
+                    alert('Error de red. Intenta de nuevo.');
+                });
+            });
+        })();
+    </script>
 </body>
 </html>

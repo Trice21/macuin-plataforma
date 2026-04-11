@@ -24,6 +24,7 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     orders = relationship("Order", back_populates="user")
+    cart_items = relationship("CartItem", back_populates="user")
 
 class Autopart(Base):
     __tablename__ = "autoparts"
@@ -38,6 +39,7 @@ class Autopart(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     order_items = relationship("OrderItem", back_populates="autopart")
+    cart_items = relationship("CartItem", back_populates="autopart")
 
 class OrderStatus(str, enum.Enum):
     PENDING = "pending"
@@ -69,3 +71,17 @@ class OrderItem(Base):
 
     order = relationship("Order", back_populates="items")
     autopart = relationship("Autopart", back_populates="order_items")
+
+
+class CartItem(Base):
+    __tablename__ = "cart_items"
+
+    id = Column(BIGINT(unsigned=True), primary_key=True, index=True)
+    user_id = Column(BIGINT(unsigned=True), ForeignKey("users.id"))
+    autopart_id = Column(BIGINT(unsigned=True), ForeignKey("autoparts.id"))
+    quantity = Column(Integer, nullable=False, default=1)
+    created_at = Column(DateTime, nullable=True)
+    updated_at = Column(DateTime, nullable=True)
+
+    user = relationship("User", back_populates="cart_items")
+    autopart = relationship("Autopart", back_populates="cart_items")

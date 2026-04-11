@@ -184,31 +184,43 @@
         .toggle-password:hover { color: var(--primary); background: rgba(74, 111, 165, 0.08); }
         .toggle-password svg { width: 1.25rem; height: 1.25rem; }
 
-        .password-strength {
-            display: flex;
-            gap: 4px;
+        .password-rules {
             margin-top: 0.5rem;
+            padding: 0.75rem 0.875rem;
+            background: rgba(31, 58, 95, 0.04);
+            border-radius: 10px;
+            border: 1px solid rgba(31, 58, 95, 0.08);
         }
-        .password-strength span {
-            flex: 1;
-            height: 4px;
-            border-radius: 2px;
-            background: #e5e7eb;
-            transition: background 0.2s;
-        }
-        .password-strength.weak span:nth-child(1) { background: var(--error); }
-        .password-strength.medium span:nth-child(1),
-        .password-strength.medium span:nth-child(2) { background: var(--warning); }
-        .password-strength.strong span:nth-child(1),
-        .password-strength.strong span:nth-child(2),
-        .password-strength.strong span:nth-child(3) { background: var(--success); }
-        .password-strength-text {
+        .password-rules-title {
             font-size: 0.75rem;
-            margin-top: 0.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
         }
-        .password-strength.weak .password-strength-text { color: var(--error); }
-        .password-strength.medium .password-strength-text { color: var(--warning); }
-        .password-strength.strong .password-strength-text { color: var(--success); }
+        .password-rules ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+        .password-rules li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.4rem;
+            margin-bottom: 0.35rem;
+        }
+        .password-rules li:last-child { margin-bottom: 0; }
+        .password-rules li .rule-icon {
+            flex-shrink: 0;
+            width: 1rem;
+            font-size: 0.7rem;
+            line-height: 1.45;
+            color: var(--text-secondary);
+        }
+        .password-rules li.ok { color: var(--text-primary); }
+        .password-rules li.ok .rule-icon { color: var(--success); }
 
         .form-error { font-size: 0.8125rem; color: var(--error); margin-top: 0.35rem; }
         .form-success { font-size: 0.8125rem; color: var(--success); margin-top: 0.35rem; }
@@ -324,10 +336,16 @@
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                         </button>
                     </div>
-                    <div class="password-strength" id="password-strength" aria-live="polite">
-                        <span></span><span></span><span></span>
+                    <div class="password-rules" id="password-rules" aria-live="polite">
+                        <p class="password-rules-title">Requisitos de la contraseña</p>
+                        <ul>
+                            <li data-rule="len"><span class="rule-icon" aria-hidden="true">○</span><span>Longitud mínima: Se recomienda que la contraseña tenga al menos 8 caracteres.</span></li>
+                            <li data-rule="lower"><span class="rule-icon" aria-hidden="true">○</span><span>Al menos una letra minúscula.</span></li>
+                            <li data-rule="upper"><span class="rule-icon" aria-hidden="true">○</span><span>Al menos una letra mayúscula.</span></li>
+                            <li data-rule="digit"><span class="rule-icon" aria-hidden="true">○</span><span>Al menos un número.</span></li>
+                            <li data-rule="special"><span class="rule-icon" aria-hidden="true">○</span><span>Diversidad: al menos un carácter especial (símbolo distinto de letras y números).</span></li>
+                        </ul>
                     </div>
-                    <div class="password-strength-text" id="password-strength-text"></div>
                     @error('password')<p class="form-error">{{ $message }}</p>@enderror
                 </div>
 
@@ -381,26 +399,29 @@
                 input.addEventListener('input', updateFilled);
             });
 
-            function strength(pwd) {
-                if (!pwd) return 0;
-                var s = 0;
-                if (pwd.length >= 8) s++;
-                if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) s++;
-                if (/\d/.test(pwd) && /[^a-zA-Z0-9]/.test(pwd)) s++;
-                if (pwd.length >= 12) s++;
-                return Math.min(3, s);
+            function updatePasswordRules(pwd) {
+                var box = document.getElementById('password-rules');
+                if (!box) return;
+                var checks = {
+                    len: pwd.length >= 8,
+                    lower: /[a-z]/.test(pwd),
+                    upper: /[A-Z]/.test(pwd),
+                    digit: /\d/.test(pwd),
+                    special: /[^A-Za-z0-9]/.test(pwd)
+                };
+                box.querySelectorAll('li[data-rule]').forEach(function(li) {
+                    var key = li.getAttribute('data-rule');
+                    var ok = checks[key];
+                    li.classList.toggle('ok', ok);
+                    var icon = li.querySelector('.rule-icon');
+                    if (icon) icon.textContent = ok ? '✓' : '○';
+                });
             }
 
             var pwdEl = document.getElementById('password');
-            var strengthEl = document.getElementById('password-strength');
-            var strengthText = document.getElementById('password-strength-text');
-            if (pwdEl && strengthEl && strengthText) {
-                pwdEl.addEventListener('input', function() {
-                    var v = this.value;
-                    var s = strength(v);
-                    strengthEl.className = 'password-strength' + (s === 1 ? ' weak' : s === 2 ? ' medium' : s === 3 ? ' strong' : '');
-                    strengthText.textContent = v.length === 0 ? '' : (s === 1 ? 'Contraseña débil' : s === 2 ? 'Contraseña media' : 'Contraseña fuerte');
-                });
+            if (pwdEl) {
+                pwdEl.addEventListener('input', function() { updatePasswordRules(this.value); });
+                updatePasswordRules(pwdEl.value);
             }
 
             form.querySelectorAll('.toggle-password').forEach(function(btn) {
