@@ -15,7 +15,7 @@
     </div>
 
     <div class="card border-0 shadow-sm p-4">
-        <form action="{{ url_for('admin_autopartes_crear') }}" method="POST" class="row g-4">
+        <form action="{{ url_for('admin_autopartes_crear') }}" method="POST" class="row g-4" enctype="multipart/form-data">
             <div class="col-md-6">
                 <label class="form-label fw-bold">Nombre de la Autoparte</label>
                 <div class="input-group">
@@ -67,12 +67,12 @@
             </div>
 
             <div class="col-md-6">
-                <label class="form-label fw-bold">URL de Imagen</label>
+                <label class="form-label fw-bold">Imagen de la Autoparte</label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0"><i class="fas fa-image text-secondary"></i></span>
-                    <input type="url" name="image_url" class="form-control border-start-0 ps-0" placeholder="http://...">
+                    <input type="file" name="image" class="form-control border-start-0 ps-0" accept="image/*" required>
                 </div>
-                <div class="form-text text-muted">Debe ser una URL válida (http/https).</div>
+                <div class="form-text text-muted">Selecciona una imagen desde tu computadora (JPG, PNG, GIF).</div>
             </div>
 
             <div class="col-12 mt-5">

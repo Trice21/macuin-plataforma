@@ -38,25 +38,25 @@
         .logo { font-size: 1.5rem; font-weight: 700; color: var(--primary); text-decoration: none; }
         .nav a { text-decoration: none; color: var(--text-secondary); margin-left: 1.5rem; font-weight: 500; }
         .nav a:hover { color: var(--primary); }
-        
+
         .main { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
         .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); text-decoration: none; margin-bottom: 2rem; font-weight: 500; }
         .back-link:hover { color: var(--primary); }
 
         .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; background: var(--card); border-radius: 20px; padding: 3rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .product-image-container { background: var(--bg); border-radius: 16px; padding: 2rem; display: flex; align-items: center; justify-content: center; }
-        .product-image { max-height: 400px; width: auto; }
-        
+        .product-image-container { background: #fff; border-radius: 16px; padding: 2rem; display: flex; align-items: center; justify-content: center; border: 1px solid #f1f5f9; }
+        .product-image { max-height: 400px; width: auto; mix-blend-mode: multiply; }
+
         .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-bottom: 1rem; }
         .badge-success { background: #D1FAE5; color: #065F46; }
-        
+
         .product-title { font-size: 2.5rem; font-weight: 700; color: var(--primary); margin-bottom: 0.5rem; }
         .product-sku { color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 2rem; }
         .product-price { font-size: 2.5rem; font-weight: 700; color: var(--secondary); margin-bottom: 2rem; }
-        
+
         .section-title { font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem; color: var(--primary); border-bottom: 2px solid var(--bg); padding-bottom: 0.5rem; }
         .product-desc { font-size: 1rem; line-height: 1.6; color: var(--text-secondary); margin-bottom: 2rem; }
-        
+
         .product-actions { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.5rem; }
         .qty-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem; }
         .qty-row label { font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); }
@@ -88,16 +88,12 @@
 
     <main class="main">
         <a href="/catalogo" class="back-link"><i class="fas fa-arrow-left"></i> Volver al Catálogo</a>
-        
+
         <div class="product-grid">
             <div class="product-image-container">
-                @if($autopart->image_url)
-                    <img src="{{ $autopart->image_url }}" alt="{{ $autopart->name }}" class="product-image">
-                @else
-                    <img src="{{ asset('images/' . $productImg) }}" alt="{{ $autopart->name }}" class="product-image" onerror="this.src='https://via.placeholder.com/400x300?text=Autoparte'">
-                @endif
+                <img src="{{ App\MacuinApi::imageUrl($autopart->image_url) }}" alt="{{ $autopart->name }}" class="product-image">
             </div>
-            
+
             <div>
                 @if($autopart->stock > 0)
                     <span class="badge badge-success">Disponible ({{ $autopart->stock }} en stock)</span>
@@ -106,14 +102,14 @@
                 @endif
                 <h1 class="product-title">{{ $autopart->name }}</h1>
                 <p class="product-sku">ID: {{ $autopart->id }} | Categoría: {{ $autopart->category ?? 'General' }}</p>
-                
+
                 <div class="product-price">${{ number_format($autopart->price, 2) }} MXN</div>
-                
+
                 <h3 class="section-title">Descripción</h3>
                 <p class="product-desc">
                     {{ $autopart->description ?? 'Esta autoparte ha sido fabricada bajo los más altos estándares de calidad OEM. Garantiza un ajuste perfecto y un rendimiento superior para su vehículo, asegurando durabilidad incluso en las condiciones más exigentes.' }}
                 </p>
-                
+
                 <h3 class="section-title">Compatibilidad</h3>
                 <p class="product-desc" style="font-size: 0.875rem;">
                     • Compatible con modelos 2018 - 2024.<br>
@@ -204,6 +200,28 @@
                     btn.disabled = false;
                     alert('Error de red. Intenta de nuevo.');
                 });
+            });
+        })();
+    </script>
+    <script>
+        (function() {
+            // Script de respaldo para corregir URLs de imágenes si fallan al cargar
+            document.querySelectorAll('img').forEach(function(img) {
+                img.onerror = function() {
+                    if (this.dataset.retried) return;
+                    this.dataset.retried = 'true';
+
+                    let src = this.getAttribute('src');
+                    if (!src) return;
+
+                    try {
+                        let url = new URL(src, window.location.origin);
+                        url.port = '5000';
+                        this.src = url.toString();
+                    } catch(e) {
+                        this.src = src.replace(/:\d+/, ':5000');
+                    }
+                };
             });
         })();
     </script>

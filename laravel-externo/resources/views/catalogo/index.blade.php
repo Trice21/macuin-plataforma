@@ -223,8 +223,8 @@
             border: 1px solid rgba(31, 58, 95, 0.06);
             box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
-        .rec-card .img { height: 80px; background: var(--bg); border-radius: 8px; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .rec-card .img img { width: 100%; height: 100%; object-fit: contain; }
+        .rec-card .img { height: 120px; background: #fff; border-radius: 8px; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #f1f5f9; }
+        .rec-card .img img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
         .rec-card .name { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); }
         .rec-card .price { font-size: 0.875rem; font-weight: 600; color: var(--primary); }
 
@@ -247,15 +247,16 @@
         .product-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(31, 58, 95, 0.1); }
         .product-card .img-wrap {
             aspect-ratio: 1;
-            background: var(--bg);
+            background: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--text-secondary);
             font-size: 0.75rem;
             overflow: hidden;
+            border-bottom: 1px solid #f1f5f9;
         }
-        .product-card .img-wrap img { width: 100%; height: 100%; object-fit: contain; }
+        .product-card .img-wrap img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
         .product-card .body { padding: 1.25rem; flex: 1; display: flex; flex-direction: column; }
         .product-card .name { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem; line-height: 1.3; }
         .product-card .sku { font-size: 0.8125rem; color: var(--text-secondary); margin-bottom: 0.5rem; }
@@ -401,7 +402,7 @@
                 <i class="fas fa-exclamation-circle" style="margin-right:0.5rem;"></i> {{ $errors->first('msg') ?? 'Ocurrió un problema con el carrito.' }}
             </div>
         @endif
-        
+
         <div class="page-header">
             <div>
                 <h1>Catálogo de autopartes</h1>
@@ -438,13 +439,7 @@
                 @foreach($autoparts->take(4) as $p)
                 <div class="rec-card">
                     <div class="img">
-                        @if($p->image_url)
-                            <img src="{{ $p->image_url }}" alt="{{ $p->name }}">
-                        @else
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 32px; height: 32px; opacity: 0.2; margin: 0 auto;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                        @endif
+                        <img src="{{ App\MacuinApi::imageUrl($p->image_url) }}" alt="{{ $p->name }}">
                     </div>
                     <div class="name">{{ $p->name }}</div>
                     <div class="price">${{ number_format($p->price, 2) }}</div>
@@ -469,16 +464,7 @@
             <article class="product-card" data-product-id="{{ $p->id }}">
                 <a href="{{ url('/catalogo/' . $p->id) }}" style="text-decoration: none; color: inherit;">
                     <div class="img-wrap">
-                        @if($p->image_url)
-                            <img src="{{ $p->image_url }}" alt="{{ $p->name }}">
-                        @else
-                            <div style="padding: 2rem; text-align: center;">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 48px; height: 48px; opacity: 0.2;">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                </svg>
-                                <p style="margin-top: 0.5rem; opacity: 0.5;">Sin imagen</p>
-                            </div>
-                        @endif
+                        <img src="{{ App\MacuinApi::imageUrl($p->image_url) }}" alt="{{ $p->name }}">
                     </div>
                 </a>
                 <div class="body">
@@ -516,6 +502,27 @@
 
     <script>
         (function() {
+            // Script de respaldo para corregir URLs de imágenes si fallan al cargar
+            document.querySelectorAll('img').forEach(function(img) {
+                img.onerror = function() {
+                    if (this.dataset.retried) return;
+                    this.dataset.retried = 'true';
+
+                    let src = this.getAttribute('src');
+                    if (!src) return;
+
+                    // Si falla, intentamos con el mismo host actual pero puerto 5000 (Flask)
+                    try {
+                        let url = new URL(src, window.location.origin);
+                        url.port = '5000';
+                        this.src = url.toString();
+                    } catch(e) {
+                        // Si falla el objeto URL, probamos un reemplazo simple
+                        this.src = src.replace(/:\d+/, ':5000');
+                    }
+                };
+            });
+
             var cartCount = {{ (int) ($cartCount ?? 0) }};
             var toast = document.getElementById('toast');
             var cartEls = document.querySelectorAll('#cart-count, #cart-count-mobile');
@@ -566,13 +573,13 @@
 
                 btnAdd.addEventListener('click', function() {
                     if (this.disabled) return;
-                    
+
                     var q = getQty();
                     var id = card.getAttribute('data-product-id');
                     var oldText = this.textContent;
                     this.textContent = '...';
                     this.disabled = true;
-                    
+
                     fetch('{{ url("/carrito/agregar") }}', {
                         method: 'POST',
                         headers: {

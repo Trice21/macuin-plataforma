@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import models.models as models
 from database import engine, Base, SessionLocal
 from routers import auth, users, autoparts, orders, reports, cart
@@ -7,6 +8,7 @@ from models.models import User, UserRole, Autopart
 from core.security import get_password_hash
 import time
 from sqlalchemy.exc import OperationalError
+import os
 
 app = FastAPI(title="MACUIN API", description="API Central de la Plataforma MACUIN", version="1.0.0")
 
@@ -76,6 +78,12 @@ app.include_router(autoparts.router)
 app.include_router(orders.router)
 app.include_router(cart.router)
 app.include_router(reports.router)
+
+# Servir archivos estáticos (imágenes)
+# Montar el directorio static de Flask para servir las imágenes
+static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "flask-interno", "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 @app.get("/")
 def read_root():

@@ -15,7 +15,7 @@
     </div>
 
     <div class="card border-0 shadow-sm p-4">
-        <form action="{{ url_for('admin_autopartes_editar', id=id) }}" method="POST" class="row g-4">
+        <form action="{{ url_for('admin_autopartes_editar', id=id) }}" method="POST" class="row g-4" enctype="multipart/form-data">
             <div class="col-md-6">
                 <label class="form-label fw-bold">Nombre de la Autoparte</label>
                 <div class="input-group">
@@ -66,12 +66,18 @@
             </div>
 
             <div class="col-md-6">
-                <label class="form-label fw-bold">URL de Imagen</label>
+                <label class="form-label fw-bold">Imagen de la Autoparte</label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0"><i class="fas fa-image text-secondary"></i></span>
-                    <input type="url" name="image_url" class="form-control border-start-0 ps-0" value="{{ autopart.image_url }}">
+                    <input type="file" name="image" class="form-control border-start-0 ps-0" accept="image/*">
                 </div>
-                <div class="form-text text-muted">Debe ser una URL válida.</div>
+                <div class="form-text text-muted">Selecciona una nueva imagen (JPG, PNG, GIF) o deja vacío para mantener la actual.</div>
+                {% if autopart.image_url %}
+                <div class="mt-2">
+                    <small class="text-muted">Imagen actual:</small><br>
+                    <img src="{{ autopart.image_url }}" alt="{{ autopart.name }}" style="max-width: 100px; max-height: 100px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                {% endif %}
             </div>
 
             <div class="col-12 mt-5">

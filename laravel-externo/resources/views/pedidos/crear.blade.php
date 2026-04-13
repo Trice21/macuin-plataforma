@@ -244,15 +244,7 @@
                     
                     @foreach($cartItems as $item)
                     <div class="product-preview" style="margin-bottom: 0.75rem;">
-                        @php
-                            $img = $item->autopart->image_url;
-                            $imgOk = $img && $img !== 'None' && filter_var($img, FILTER_VALIDATE_URL);
-                        @endphp
-                        @if($imgOk)
-                            <img src="{{ $img }}" class="preview-img" alt="{{ $item->autopart->name }}">
-                        @else
-                            <img src="https://via.placeholder.com/150" class="preview-img" alt="">
-                        @endif
+                        <img src="{{ App\MacuinApi::imageUrl($item->autopart->image_url) }}" class="preview-img" alt="{{ $item->autopart->name }}">
                         <div class="preview-info" style="flex:1;">
                             <p class="preview-name">{{ $item->autopart->name }} (x{{ $item->quantity }})</p>
                             <p class="preview-sku">ID: {{ $item->autopart->id }}</p>

@@ -464,11 +464,7 @@
                                     <td>
                                         <div class="prod-info">
                                             <div class="prod-thumb">
-                                                @if($item->autopart && $item->autopart->image_url)
-                                                    <img src="{{ $item->autopart->image_url }}" alt="{{ $item->autopart->name }}">
-                                                @else
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;opacity:0.2;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                                @endif
+                                                <img src="{{ App\MacuinApi::imageUrl($item->autopart->image_url ?? null) }}" alt="{{ $item->autopart->name ?? 'Producto' }}">
                                             </div>
                                             <div>
                                                 <div class="prod-name">{{ $item->autopart->name ?? 'Producto no disponible' }}</div>
@@ -541,6 +537,25 @@
 
     <script>
         (function() {
+            // Script de respaldo para corregir URLs de imágenes si fallan al cargar
+            document.querySelectorAll('img').forEach(function(img) {
+                img.onerror = function() {
+                    if (this.dataset.retried) return;
+                    this.dataset.retried = 'true';
+
+                    let src = this.getAttribute('src');
+                    if (!src) return;
+
+                    try {
+                        let url = new URL(src, window.location.origin);
+                        url.port = '5000';
+                        this.src = url.toString();
+                    } catch(e) {
+                        this.src = src.replace(/:\d+/, ':5000');
+                    }
+                };
+            });
+
             // User dropdown toggle
             document.getElementById('user-menu-btn').addEventListener('click', function() {
                 var d = document.getElementById('user-dropdown');

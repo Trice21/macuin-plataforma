@@ -1,6 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory
 import requests
 import os
+import uuid
+from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -8,6 +10,26 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "flask_secret_key_123")
 API_URL = os.getenv("API_URL", "http://macuin-api:8000")
+
+# Configuración para subida de archivos
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'images', 'autoparts')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def save_uploaded_file(file):
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        # Generar nombre único para evitar conflictos
+        unique_filename = f"{uuid.uuid4().hex}_{filename}"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+        file.save(filepath)
+        # Retornar la URL relativa para acceder a la imagen
+        return url_for('static', filename=f'images/autoparts/{unique_filename}')
+    return None
 
 @app.route("/")
 def index():
@@ -168,13 +190,27 @@ def autopartes():
 @app.route("/admin/autopartes/crear", methods=["GET", "POST"], endpoint="admin_autopartes_crear")
 def autopartes_crear():
     if request.method == "POST":
+        # Manejar subida de imagen
+        image_url = None
+        if 'image' in request.files:
+            file = request.files['image']
+            if file.filename != '':
+                image_url = save_uploaded_file(file)
+                if not image_url:
+                    flash("Error: Formato de imagen no válido. Use PNG, JPG, JPEG o GIF.", "danger")
+                    return render_template("admin/autopartes_crear.html", active_page='autopartes')
+        
+        # Si no se subió imagen, usar una imagen por defecto
+        if not image_url:
+            image_url = url_for('static', filename='images/default-autopart.svg')
+        
         data = {
             "name": request.form.get("name"),
             "description": request.form.get("description"),
             "price": float(request.form.get("price")),
             "stock": int(request.form.get("stock")),
             "category": request.form.get("category"),
-            "image_url": request.form.get("image_url")
+            "image_url": image_url
         }
         res, status = api_request("POST", "/autoparts/", data=data)
         if status == 201 or status == 200:
@@ -188,13 +224,28 @@ def autopartes_crear():
 @app.route("/admin/autopartes/editar/<int:id>", methods=["GET", "POST"], endpoint="admin_autopartes_editar")
 def autopartes_editar(id):
     if request.method == "POST":
+        # Obtener datos actuales de la autoparte
+        current_autopart, _ = api_request("GET", f"/autoparts/{id}")
+        
+        # Manejar subida de nueva imagen
+        image_url = current_autopart.get("image_url")  # Mantener imagen actual por defecto
+        if 'image' in request.files:
+            file = request.files['image']
+            if file.filename != '':
+                new_image_url = save_uploaded_file(file)
+                if new_image_url:
+                    image_url = new_image_url
+                else:
+                    flash("Error: Formato de imagen no válido. Use PNG, JPG, JPEG o GIF.", "danger")
+                    return render_template("admin/autopartes_editar.html", id=id, autopart=current_autopart, active_page='autopartes')
+        
         data = {
             "name": request.form.get("name"),
             "description": request.form.get("description"),
             "price": float(request.form.get("price")),
             "stock": int(request.form.get("stock")),
             "category": request.form.get("category"),
-            "image_url": request.form.get("image_url")
+            "image_url": image_url
         }
         res, status = api_request("PUT", f"/autoparts/{id}", data=data)
         if status == 200:
@@ -303,7 +354,33 @@ def admin_pedido_status(id):
 
 @app.route("/catalogo")
 def catalogo():
-    return render_template("catalogo.html", active_page='catalogo')
+    return render_template("legacy/catalogo.html", active_page='catalogo')
+
+@app.route("/api/catalogo/autoparts")
+def api_catalogo_autoparts():
+    # Obtener autopartes desde la API principal
+    autoparts, status = api_request("GET", "/autoparts/")
+    if status == 200:
+        # Obtener la URL base dinámicamente
+        request_host = request.host_url.rstrip('/')
+        
+        # Procesar las URLs de imágenes para que sean accesibles
+        for autopart in autoparts:
+            if autopart.get('image_url'):
+                image_url = autopart['image_url']
+                if not image_url.startswith('http'):
+                    # Si es una URL relativa, convertirla a absoluta
+                    if image_url.startswith('/'):
+                        autopart['image_url'] = f"{request_host}{image_url}"
+                    else:
+                        # Si es solo el nombre del archivo, construir la URL completa
+                        autopart['image_url'] = f"{request_host}/static/images/autoparts/{image_url}"
+            else:
+                # Si no hay imagen, usar la imagen por defecto
+                autopart['image_url'] = f"{request_host}/static/images/default-autopart.svg"
+        return {"autoparts": autoparts}
+    else:
+        return {"error": "No se pudieron cargar las autopartes"}, 500
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')

@@ -29,7 +29,7 @@
             flex-direction: column;
         }
         .page-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%); z-index: -1; }
-        
+
         /* Header estandarizado */
         .header {
             background: var(--card);
@@ -112,10 +112,10 @@
         .item-info { flex: 1; }
         .item-name { font-weight: 600; font-size: 1rem; color: var(--text-primary); margin-bottom: 0.25rem; }
         .item-sku { font-size: 0.8125rem; color: var(--text-secondary); }
-        
+
         .item-price { font-weight: 700; color: var(--primary); font-size: 1.125rem; }
         .item-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; }
-        
+
         .btn-remove {
             background: none; border: none; color: var(--error);
             font-size: 0.875rem; cursor: pointer; text-decoration: underline; opacity: 0.8;
@@ -126,7 +126,7 @@
         .summary-card { position: sticky; top: 100px; }
         .summary-row { display: flex; justify-content: space-between; font-size: 0.9375rem; margin-bottom: 0.75rem; color: var(--text-secondary); }
         .summary-total { display: flex; justify-content: space-between; font-size: 1.125rem; font-weight: 700; color: var(--text-primary); padding-top: 1rem; border-top: 1px solid #e5e7eb; margin-top: 1rem; margin-bottom: 1.5rem; }
-        
+
         .btn-checkout {
             display: flex; align-items: center; justify-content: center; gap: 0.5rem;
             width: 100%; padding: 0.875rem; border-radius: 10px;
@@ -195,11 +195,7 @@
                     @foreach($cartItems as $item)
                     <div class="cart-item">
                         <div class="item-img">
-                            @if($item->autopart->image_url)
-                                <img src="{{ $item->autopart->image_url }}" alt="{{ $item->autopart->name }}">
-                            @else
-                                <i class="fas fa-box" style="font-size: 2rem; color: #ccc;"></i>
-                            @endif
+                            <img src="{{ App\MacuinApi::imageUrl($item->autopart->image_url) }}" alt="{{ $item->autopart->name }}">
                         </div>
                         <div class="item-info">
                             <h3 class="item-name">{{ $item->autopart->name }}</h3>
@@ -218,7 +214,7 @@
             <div>
                 <div class="card summary-card">
                     <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Resumen de Orden</h3>
-                    
+
                     <div class="summary-row">
                         <span>Subtotal de productos</span>
                         <span>${{ number_format($subtotal, 2) }}</span>
@@ -227,16 +223,16 @@
                         <span>IVA Temporal (16%)</span>
                         <span>Estimado</span>
                     </div>
-                    
+
                     <div class="summary-total">
                         <span>Total Parcial</span>
                         <span>${{ number_format($subtotal, 2) }}</span>
                     </div>
-                    
+
                     <a href="{{ url('/pedidos/crear') }}" class="btn-checkout">
                         Proceder al Pago <i class="fas fa-arrow-right"></i>
                     </a>
-                    
+
                     <a href="{{ url('/catalogo') }}" class="btn-empty">Continuar comprando</a>
                 </div>
             </div>
@@ -245,6 +241,27 @@
     </main>
 
     <script>
+        (function() {
+            // Script de respaldo para corregir URLs de imágenes si fallan al cargar
+            document.querySelectorAll('img').forEach(function(img) {
+                img.onerror = function() {
+                    if (this.dataset.retried) return;
+                    this.dataset.retried = 'true';
+
+                    let src = this.getAttribute('src');
+                    if (!src) return;
+
+                    try {
+                        let url = new URL(src, window.location.origin);
+                        url.port = '5000';
+                        this.src = url.toString();
+                    } catch(e) {
+                        this.src = src.replace(/:\d+/, ':5000');
+                    }
+                };
+            });
+        })();
+
         document.getElementById('user-menu-btn').addEventListener('click', function() {
             var d = document.getElementById('user-dropdown');
             d.classList.toggle('show');
